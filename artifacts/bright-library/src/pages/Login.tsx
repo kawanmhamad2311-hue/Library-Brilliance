@@ -24,24 +24,17 @@ const studentSchema = z.object({
   password: z.string().min(1, { message: "تکایە تێپەڕەوشە بنووسە" }),
 });
 
-const adminSchema = z.object({
-  code: z.string().min(1, { message: "تکایە کۆدی ئەدمین بنووسە" }),
-});
-
 export default function Login() {
   const [, setLocation] = useLocation();
   const { setToken } = useAuth();
   const { toast } = useToast();
   const [mode, setMode] = useState<"student" | "admin">("student");
+  const [adminCode, setAdminCode] = useState("");
+  const [adminError, setAdminError] = useState("");
 
   const studentForm = useForm<z.infer<typeof studentSchema>>({
     resolver: zodResolver(studentSchema),
     defaultValues: { username: "", password: "" },
-  });
-
-  const adminForm = useForm<z.infer<typeof adminSchema>>({
-    resolver: zodResolver(adminSchema),
-    defaultValues: { code: "" },
   });
 
   const loginMutation = useLogin();
@@ -59,23 +52,29 @@ export default function Login() {
     });
   }
 
-  function onAdminSubmit(values: z.infer<typeof adminSchema>) {
-    loginMutation.mutate({ data: { username: "admin", password: values.code } }, {
+  function onAdminSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adminCode.trim()) {
+      setAdminError("تکایە کۆدی ئەدمین بنووسە");
+      return;
+    }
+    setAdminError("");
+    loginMutation.mutate({ data: { username: "admin", password: adminCode } }, {
       onSuccess: (data) => {
         setToken(data.token);
         toast({ title: "بە سەرکەوتوویی چوویتە ژوورەوە", description: "بەخێربێیت ئەدمین" });
         setLocation("/admin");
       },
       onError: () => {
-        toast({ variant: "destructive", title: "کۆد هەڵەیە", description: "کۆدی ئەدمین هەڵەیە، دووبارە هەوڵ بدەرەوە" });
+        setAdminError("کۆدی ئەدمین هەڵەیە، دووبارە هەوڵ بدەرەوە");
       },
     });
   }
 
   function switchMode(newMode: "student" | "admin") {
     setMode(newMode);
-    studentForm.reset();
-    adminForm.reset();
+    setAdminCode("");
+    setAdminError("");
     loginMutation.reset();
   }
 
@@ -134,7 +133,7 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>ناوی بەکارهێنەر</FormLabel>
                       <FormControl>
-                        <Input placeholder="ناوی بەکارهێنەرەکەت..." {...field} className="text-right" dir="ltr" />
+                        <Input placeholder="ناوی بەکارهێنەرەکەت..." {...field} className="text-right" dir="ltr" autoComplete="username" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -147,7 +146,7 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>تێپەڕەوشە</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="تێپەڕەوشەکەت..." {...field} className="text-right" dir="ltr" />
+                        <Input type="password" placeholder="تێپەڕەوشەکەت..." {...field} className="text-right" dir="ltr" autoComplete="current-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -160,31 +159,32 @@ export default function Login() {
               </form>
             </Form>
           ) : (
-            <Form {...adminForm}>
-              <form onSubmit={adminForm.handleSubmit(onAdminSubmit)} className="space-y-4">
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary">
-                  <ShieldCheck className="h-4 w-4 shrink-0" />
-                  <span>کۆدی تایبەتی ئەدمین بنووسە</span>
-                </div>
-                <FormField
-                  control={adminForm.control}
-                  name="code"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>کۆدی ئەدمین</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="کۆدەکەت بنووسە..." {...field} className="text-right" dir="ltr" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+            <form onSubmit={onAdminSubmit} className="space-y-4">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-primary">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span>کۆدی تایبەتی ئەدمین بنووسە</span>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  کۆدی ئەدمین
+                </label>
+                <input
+                  type="password"
+                  value={adminCode}
+                  onChange={(e) => { setAdminCode(e.target.value); setAdminError(""); }}
+                  placeholder="کۆدەکەت بنووسە..."
+                  autoComplete="current-password"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm text-right"
                 />
-                <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                  {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  چوونە ژوورەوە وەک ئەدمین
-                </Button>
-              </form>
-            </Form>
+                {adminError && (
+                  <p className="text-sm font-medium text-destructive">{adminError}</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
+                {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                چوونە ژوورەوە وەک ئەدمین
+              </Button>
+            </form>
           )}
         </CardContent>
 
