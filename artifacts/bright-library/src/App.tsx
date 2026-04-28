@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 // Pages
 import Login from "@/pages/Login";
@@ -21,10 +22,18 @@ function Router() {
     <Switch>
       <Route path="/" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/library" component={Library} />
-      <Route path="/books/:id" component={BookDetail} />
-      <Route path="/feedback" component={Feedback} />
-      <Route path="/admin" component={Admin} />
+      <Route path="/library">
+        <ProtectedRoute><Library /></ProtectedRoute>
+      </Route>
+      <Route path="/books/:id">
+        <ProtectedRoute><BookDetail /></ProtectedRoute>
+      </Route>
+      <Route path="/feedback">
+        <ProtectedRoute><Feedback /></ProtectedRoute>
+      </Route>
+      <Route path="/admin">
+        <ProtectedRoute requireAdmin><Admin /></ProtectedRoute>
+      </Route>
       <Route component={NotFound} />
     </Switch>
   );
