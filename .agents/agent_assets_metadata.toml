@@ -6,3 +6,9 @@ id = "sGW6bg-JsQKjh_Ctzu5VS"
 uri = "file://bright-library-export.zip"
 type = "unspecified"
 title = "کتێبخانەی بڕایت — Export (HTML + JS + CSS + MySQL)"
+
+[[outputs]]
+id = "BrCxIjczCJPTqi1KKGAJj"
+uri = "file://bright-library-source.zip"
+type = "unspecified"
+title = "کتێبخانەی بڕایت — Source Code (VSCode)"
