@@ -19,7 +19,7 @@ import {
   useDeleteUser,
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
-import { DEPARTMENTS } from "@/pages/Register";
+import { DEPARTMENTS } from "@/constants/departments";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";

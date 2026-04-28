@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useListBooks } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
-import { DEPARTMENTS } from "@/pages/Register";
+import { DEPARTMENTS } from "@/constants/departments";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

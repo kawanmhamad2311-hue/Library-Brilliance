@@ -25,14 +25,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-export const DEPARTMENTS = [
-  "بەشی پەرستاری",
-  "بەشی تەکنیکی چاو",
-  "بەشی ئایتی",
-  "بەشی دەرمانسازی",
-  "بەشی شیکاری نەخۆشیەکان",
-  "بەشی میکانیکی ئۆتۆمبیل",
-];
+import { DEPARTMENTS } from "@/constants/departments";
+export { DEPARTMENTS };
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "تکایە ناوێکی تەواو بنووسە" }),
