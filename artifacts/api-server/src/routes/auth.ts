@@ -41,6 +41,7 @@ router.post("/auth/register", async (req, res) => {
       department: user.department,
       badgeCode: user.badgeCode,
       role: user.role,
+      isActive: user.isActive,
       createdAt: user.createdAt,
     },
   });
@@ -68,6 +69,10 @@ router.post("/auth/login", async (req, res) => {
       }).returning();
       adminUser = newAdmin;
     }
+    if (!adminUser.isActive) {
+      res.status(403).json({ error: "Account is deactivated" });
+      return;
+    }
     const token = signToken(adminUser.id);
     res.json({
       token,
@@ -78,6 +83,7 @@ router.post("/auth/login", async (req, res) => {
         department: adminUser.department,
         badgeCode: adminUser.badgeCode,
         role: adminUser.role,
+        isActive: adminUser.isActive,
         createdAt: adminUser.createdAt,
       },
     });
@@ -97,6 +103,11 @@ router.post("/auth/login", async (req, res) => {
     return;
   }
 
+  if (!user.isActive) {
+    res.status(403).json({ error: "Account is deactivated" });
+    return;
+  }
+
   const token = signToken(user.id);
   res.json({
     token,
@@ -107,6 +118,7 @@ router.post("/auth/login", async (req, res) => {
       department: user.department,
       badgeCode: user.badgeCode,
       role: user.role,
+      isActive: user.isActive,
       createdAt: user.createdAt,
     },
   });
@@ -124,6 +136,7 @@ router.get("/auth/me", requireAuth, (req, res) => {
     department: req.user.department,
     badgeCode: req.user.badgeCode,
     role: req.user.role,
+    isActive: req.user.isActive,
     createdAt: req.user.createdAt,
   });
 });

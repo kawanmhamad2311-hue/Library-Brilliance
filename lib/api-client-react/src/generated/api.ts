@@ -39,6 +39,7 @@ import type {
   UploadUrlRequest,
   UploadUrlResponse,
   User,
+  UserActionResponse,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -1419,6 +1420,258 @@ export function useListUsers<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Deactivate a student account (admin only)
+ */
+export const getDeactivateUserUrl = (id: number) => {
+  return `/api/admin/users/${id}/deactivate`;
+};
+
+export const deactivateUser = async (
+  id: number,
+  options?: RequestInit,
+): Promise<UserActionResponse> => {
+  return customFetch<UserActionResponse>(getDeactivateUserUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getDeactivateUserMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivateUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deactivateUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deactivateUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deactivateUser>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deactivateUser(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeactivateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deactivateUser>>
+>;
+
+export type DeactivateUserMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Deactivate a student account (admin only)
+ */
+export const useDeactivateUser = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deactivateUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deactivateUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeactivateUserMutationOptions(options));
+};
+
+/**
+ * @summary Reactivate a student account (admin only)
+ */
+export const getReactivateUserUrl = (id: number) => {
+  return `/api/admin/users/${id}/reactivate`;
+};
+
+export const reactivateUser = async (
+  id: number,
+  options?: RequestInit,
+): Promise<UserActionResponse> => {
+  return customFetch<UserActionResponse>(getReactivateUserUrl(id), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getReactivateUserMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactivateUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactivateUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["reactivateUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactivateUser>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return reactivateUser(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactivateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reactivateUser>>
+>;
+
+export type ReactivateUserMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Reactivate a student account (admin only)
+ */
+export const useReactivateUser = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactivateUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reactivateUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getReactivateUserMutationOptions(options));
+};
+
+/**
+ * @summary Delete a student account (admin only)
+ */
+export const getDeleteUserUrl = (id: number) => {
+  return `/api/admin/users/${id}`;
+};
+
+export const deleteUser = async (
+  id: number,
+  options?: RequestInit,
+): Promise<UserActionResponse> => {
+  return customFetch<UserActionResponse>(getDeleteUserUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteUserMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteUser>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteUser(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteUser>>
+>;
+
+export type DeleteUserMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Delete a student account (admin only)
+ */
+export const useDeleteUser = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteUser>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteUser>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteUserMutationOptions(options));
+};
 
 /**
  * @summary Upload a book cover image (admin only)

@@ -41,6 +41,10 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     res.status(401).json({ error: "User not found" });
     return;
   }
+  if (!users[0].isActive) {
+    res.status(403).json({ error: "Account is deactivated" });
+    return;
+  }
   req.user = users[0];
   next();
 }

@@ -14,6 +14,9 @@ import {
   useListAdminFeedback,
   useGetUnreadNotificationsCount,
   useMarkAllNotificationsRead,
+  useDeactivateUser,
+  useReactivateUser,
+  useDeleteUser,
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { DEPARTMENTS } from "@/pages/Register";
@@ -32,7 +35,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -40,7 +43,8 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { 
   Book, BookOpen, Download, Loader2, MessageSquare, Plus, 
-  Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X, CheckCircle
+  Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X, CheckCircle,
+  UserX, UserCheck, AlertTriangle
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
@@ -129,6 +133,11 @@ export default function Admin() {
 
   const createBookMutation = useCreateBook();
   const deleteBookMutation = useDeleteBook();
+  const deactivateUserMutation = useDeactivateUser();
+  const reactivateUserMutation = useReactivateUser();
+  const deleteUserMutation = useDeleteUser();
+
+  const [deleteUserDialog, setDeleteUserDialog] = useState<{ id: number; name: string } | null>(null);
 
   const form = useForm<z.infer<typeof bookSchema>>({
     resolver: zodResolver(bookSchema),
@@ -262,6 +271,50 @@ export default function Admin() {
         queryClient.invalidateQueries({ queryKey: getGetUnreadNotificationsCountQueryKey() });
         queryClient.invalidateQueries({ queryKey: getListDownloadsQueryKey() });
         toast({ title: "هەموو ئاگادارییەکان خوێندرانەوە" });
+      },
+    });
+  }
+
+  function handleToggleUserActive(id: number, currentlyActive: boolean) {
+    const mutation = currentlyActive ? deactivateUserMutation : reactivateUserMutation;
+    mutation.mutate({ id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+        toast({
+          title: currentlyActive ? "ئەکاونت ناچالاک کرا" : "ئەکاونت چالاک کرا",
+          description: currentlyActive
+            ? "ئەم قوتابییە دیگەر ناتوانێت چوونەژوورەوە."
+            : "ئەم قوتابییە دوبارە توانای چوونەژوورەوەی هەیە.",
+        });
+      },
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "هەڵە روویدا",
+          description: "نەتوانرا ئەکاونتەکە گۆڕبێت.",
+        });
+      },
+    });
+  }
+
+  function handleDeleteUser() {
+    if (!deleteUserDialog) return;
+    deleteUserMutation.mutate({ id: deleteUserDialog.id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+        setDeleteUserDialog(null);
+        toast({
+          title: "ئەکاونت سڕایەوە",
+          description: "ئەکاونتی قوتابییەکە بە سەرکەوتوویی سڕایەوە.",
+        });
+      },
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "هەڵە روویدا",
+          description: "نەتوانرا ئەکاونتەکە بسڕێتەوە.",
+        });
       },
     });
   }
@@ -669,28 +722,61 @@ export default function Admin() {
                     <TableHeader className="bg-muted/50">
                       <TableRow>
                         <TableHead className="text-right">ناو</TableHead>
-                        <TableHead className="text-right">ناوی بەکارهێنەر</TableHead>
-                        <TableHead className="text-right">بەش</TableHead>
-                        <TableHead className="text-left">بەرواری تۆماربوون</TableHead>
+                        <TableHead className="text-right hidden sm:table-cell">ناوی بەکارهێنەر</TableHead>
+                        <TableHead className="text-right hidden md:table-cell">بەش</TableHead>
+                        <TableHead className="text-right">دۆخ</TableHead>
+                        <TableHead className="text-left">کردار</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isUsersLoading ? (
-                        <TableRow><TableCell colSpan={4} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/50" /></TableCell></TableRow>
-                      ) : users?.length === 0 ? (
-                        <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">هیچ بەکارهێنەرێک نییە</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/50" /></TableCell></TableRow>
+                      ) : users?.filter(u => u.role !== "admin").length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">هیچ بەکارهێنەرێک نییە</TableCell></TableRow>
                       ) : (
                         users?.filter(u => u.role !== "admin").map((u) => (
-                          <TableRow key={u.id}>
-                            <TableCell className="font-medium">{u.name}</TableCell>
-                            <TableCell className="font-mono text-sm text-muted-foreground" dir="ltr">{u.username}</TableCell>
+                          <TableRow key={u.id} className={!u.isActive ? "opacity-60" : undefined}>
                             <TableCell>
+                              <div className="font-medium">{u.name}</div>
+                              <div className="text-xs text-muted-foreground font-mono sm:hidden" dir="ltr">{u.username}</div>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm text-muted-foreground hidden sm:table-cell" dir="ltr">{u.username}</TableCell>
+                            <TableCell className="hidden md:table-cell">
                               <Badge variant="outline" className="font-normal bg-muted/30">
                                 {u.department}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-left text-muted-foreground text-sm" dir="ltr">
-                              {format(new Date(u.createdAt), "yyyy/MM/dd")}
+                            <TableCell>
+                              {u.isActive ? (
+                                <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50 font-normal">چالاک</Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-destructive border-destructive/30 bg-destructive/5 font-normal">ناچالاک</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-left">
+                              <div className="flex items-center gap-1 justify-end">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={u.isActive ? "ناچالاک کردن" : "چالاک کردن"}
+                                  className={u.isActive
+                                    ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                    : "text-green-600 hover:text-green-700 hover:bg-green-50"}
+                                  onClick={() => handleToggleUserActive(u.id, u.isActive)}
+                                  disabled={deactivateUserMutation.isPending || reactivateUserMutation.isPending}
+                                >
+                                  {u.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="سڕینەوە"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => setDeleteUserDialog({ id: u.id, name: u.name })}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -700,6 +786,41 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Delete user confirmation dialog */}
+            <Dialog open={!!deleteUserDialog} onOpenChange={(open) => { if (!open) setDeleteUserDialog(null); }}>
+              <DialogContent dir="rtl">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-destructive">
+                    <AlertTriangle className="h-5 w-5" />
+                    سڕینەوەی ئەکاونت
+                  </DialogTitle>
+                  <DialogDescription>
+                    دڵنیایت لە سڕینەوەی ئەکاونتی{" "}
+                    <span className="font-semibold text-foreground">{deleteUserDialog?.name}</span>؟
+                    <br />
+                    ئەم کردارە گەرانەوەی نییە و هەموو داتاکانی قوتابییەکە دەسڕێتەوە.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button variant="outline" onClick={() => setDeleteUserDialog(null)}>
+                    پاشگەزبوونەوە
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteUser}
+                    disabled={deleteUserMutation.isPending}
+                  >
+                    {deleteUserMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                    ) : (
+                      <Trash2 className="h-4 w-4 ml-2" />
+                    )}
+                    بەڵێ، بسڕەوە
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           <TabsContent value="feedback" className="mt-6">

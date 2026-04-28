@@ -43,6 +43,7 @@ export const LoginResponse = zod.object({
     department: zod.string(),
     badgeCode: zod.string(),
     role: zod.enum(["student", "admin"]),
+    isActive: zod.boolean(),
     createdAt: zod.coerce.date(),
   }),
 });
@@ -64,6 +65,7 @@ export const GetMeResponse = zod.object({
   department: zod.string(),
   badgeCode: zod.string(),
   role: zod.enum(["student", "admin"]),
+  isActive: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
 
@@ -246,9 +248,43 @@ export const ListUsersResponseItem = zod.object({
   department: zod.string(),
   badgeCode: zod.string(),
   role: zod.enum(["student", "admin"]),
+  isActive: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
+
+/**
+ * @summary Deactivate a student account (admin only)
+ */
+export const DeactivateUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeactivateUserResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Reactivate a student account (admin only)
+ */
+export const ReactivateUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const ReactivateUserResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Delete a student account (admin only)
+ */
+export const DeleteUserParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const DeleteUserResponse = zod.object({
+  success: zod.boolean(),
+});
 
 /**
  * @summary Upload a book cover image (admin only)

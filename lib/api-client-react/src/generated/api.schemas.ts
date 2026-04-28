@@ -44,12 +44,17 @@ export interface User {
   department: string;
   badgeCode: string;
   role: UserRole;
+  isActive: boolean;
   createdAt: string;
 }
 
 export interface AuthResponse {
   token: string;
   user: User;
+}
+
+export interface UserActionResponse {
+  success: boolean;
 }
 
 export interface Book {
