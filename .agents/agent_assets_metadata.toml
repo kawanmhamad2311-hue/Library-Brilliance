@@ -30,3 +30,9 @@ id = "AzTGR9IrROXZ_wo6UiUxA"
 uri = "file://bright-library-vscode.zip"
 type = "unspecified"
 title = "کتێبخانەی بڕایت — VSCode (Source Code + README)"
+
+[[outputs]]
+id = "Ps8UjPUgf1mLaoAVEGP-Q"
+uri = "file://RAILWAY_DEPLOY.md"
+type = "text"
+title = "رێنمایی دیپلۆی Railway"

@@ -1,0 +1,37 @@
+FROM node:20-alpine AS base
+RUN npm install -g pnpm@10.26.1
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY tsconfig.base.json tsconfig.json ./
+COPY artifacts/bright-library/package.json ./artifacts/bright-library/
+COPY lib/api-client-react/package.json ./lib/api-client-react/
+COPY lib/api-zod/package.json ./lib/api-zod/
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+FROM deps AS builder
+COPY lib/api-zod/src ./lib/api-zod/src
+COPY lib/api-client-react/src ./lib/api-client-react/src
+COPY artifacts/bright-library/src ./artifacts/bright-library/src
+COPY artifacts/bright-library/public ./artifacts/bright-library/public
+COPY artifacts/bright-library/index.html ./artifacts/bright-library/
+COPY artifacts/bright-library/vite.config.ts ./artifacts/bright-library/
+COPY artifacts/bright-library/tailwind.config.ts ./artifacts/bright-library/ 2>/dev/null || true
+COPY artifacts/bright-library/tsconfig.json ./artifacts/bright-library/
+COPY artifacts/bright-library/components.json ./artifacts/bright-library/
+
+ARG VITE_API_URL
+ENV PORT=3000
+ENV BASE_PATH=/
+
+RUN pnpm --filter @workspace/bright-library run build
+
+FROM node:20-alpine AS runner
+RUN npm install -g serve
+WORKDIR /app
+
+COPY --from=builder /app/artifacts/bright-library/dist/public ./public
+
+EXPOSE 3000
+CMD ["serve", "-s", "public", "-l", "3000"]
