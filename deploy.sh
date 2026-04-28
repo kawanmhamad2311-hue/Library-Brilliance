@@ -1,8 +1,15 @@
 #!/bin/bash
 set -e
 
-echo "📦 Committing and pushing to GitHub..."
-git add -A
-git commit -m "${1:-update}" 2>/dev/null || echo "(nothing new to commit)"
-git push origin main
-echo "✅ Done — Railway will auto-deploy in ~2 minutes"
+if [ -z "$RAILWAY_TOKEN" ]; then
+  echo "❌ RAILWAY_TOKEN دانەنراوە."
+  echo ""
+  echo "   ١. بچۆ: https://railway.app/account/tokens"
+  echo "   ٢. Token-ێک درووست بکە"
+  echo "   ٣. لە Replit: Tools → Secrets → RAILWAY_TOKEN زیاد بکە"
+  exit 1
+fi
+
+echo "🚂 دیپلۆی بۆ Railway..."
+railway up --detach
+echo "✅ شاندرا — https://railway.app بچۆ بۆ بینینی حاڵەتەکە"
