@@ -1,42 +1,24 @@
-FROM node:20-alpine AS base
+FROM node:20-alpine AS builder
+ENV npm_config_user_agent="pnpm/10.26.1 npm/? node/v20.0.0 linux x64"
 RUN npm install -g pnpm@10.26.1
 WORKDIR /app
-
-FROM base AS deps
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY tsconfig.base.json tsconfig.json ./
-COPY artifacts/api-server/package.json ./artifacts/api-server/
-COPY lib/db/package.json ./lib/db/
-COPY lib/api-zod/package.json ./lib/api-zod/
-COPY lib/api-spec/package.json ./lib/api-spec/ 2>/dev/null || true
-RUN pnpm install --frozen-lockfile --ignore-scripts
-
-FROM deps AS builder
-COPY lib/db/src ./lib/db/src
-COPY lib/db/drizzle.config.ts ./lib/db/
-COPY lib/api-zod/src ./lib/api-zod/src
-COPY artifacts/api-server/src ./artifacts/api-server/src
-COPY artifacts/api-server/tsconfig.json ./artifacts/api-server/
-COPY artifacts/api-server/build.mjs ./artifacts/api-server/
+COPY . .
+RUN pnpm install --no-frozen-lockfile
 RUN pnpm --filter @workspace/api-server run build
 
 FROM node:20-alpine AS runner
+ENV npm_config_user_agent="pnpm/10.26.1 npm/? node/v20.0.0 linux x64"
 RUN npm install -g pnpm@10.26.1
 WORKDIR /app
 ENV NODE_ENV=production
-
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY tsconfig.base.json tsconfig.json ./
 COPY artifacts/api-server/package.json ./artifacts/api-server/
 COPY lib/db/package.json ./lib/db/
 COPY lib/api-zod/package.json ./lib/api-zod/
-RUN pnpm install --frozen-lockfile --prod --ignore-scripts
-
+COPY lib/api-client-react/package.json ./lib/api-client-react/
+COPY lib/api-spec/package.json ./lib/api-spec/
+RUN pnpm install --prod --no-frozen-lockfile
 COPY --from=builder /app/artifacts/api-server/dist ./artifacts/api-server/dist
-COPY lib/db/src ./lib/db/src
-COPY lib/api-zod/src ./lib/api-zod/src
-
 RUN mkdir -p /app/artifacts/api-server/uploads
-
 EXPOSE 8080
 CMD ["node", "--enable-source-maps", "./artifacts/api-server/dist/index.mjs"]

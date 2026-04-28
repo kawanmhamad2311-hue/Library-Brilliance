@@ -1,99 +1,92 @@
-# 🚂 دیپلۆی کتێبخانەی بڕایت لەسەر Railway
+# دیپلۆی کتێبخانەی بڕایت لەسەر Railway
 
-## پێشمەرجەکان
+## ئامادەکاری: سێ سێرڤیس پێویستە
 
-- هەژماری Railway: https://railway.app
-- GitHub Repo ئەم پڕۆژەیەت
+| سێرڤیس | بەکارهێنان | Dockerfile |
+|--------|-----------|------------|
+| **PostgreSQL** | داتابەیس | Railway دابین دەکات |
+| **API Server** | باکئەند | `Dockerfile.api` |
+| **Frontend** | ڕووکار | `Dockerfile.frontend` |
 
 ---
 
-## گام بە گام
+## گام ١ — داتابەیس PostgreSQL
 
-### گام ١ — داتابەیس PostgreSQL
-
-١. لە Railway Dashboard کلیک بکە **New Project**
+١. بچۆ [railway.app](https://railway.app) → **New Project**
 ٢. هەڵبژێرە **Deploy PostgreSQL**
-٣. دواتر لە Variables tab وەی داتابەیسەکە، `DATABASE_URL` بکۆپی بکە
+٣. لە **Variables** tab، `DATABASE_URL` بکۆپی بکە — پاشتر پێویستت دەبێت
 
 ---
 
-### گام ٢ — دیپلۆی API Server
+## گام ٢ — API Server
 
-١. کلیک بکە **New Service → GitHub Repo**
+١. لە هەمان پڕۆژەکە کلیک بکە **+ New → GitHub Repo**
 ٢. Repository-ەکەت هەڵبژێرە
-٣. لە Settings زانیارییەکانی خوارەوە دابنێ:
+٣. بچۆ **Settings → Build**:
+   - **Builder**: Dockerfile
+   - **Dockerfile Path**: `Dockerfile.api`
+٤. بچۆ **Settings → Deploy**:
+   - **Start Command**: _(خاڵی بهێڵەوە، Dockerfile خۆی دیاری دەکات)_
+٥. بچۆ **Variables** و ئەمانە زیاد بکە:
 
-**Build Command:**
 ```
-pnpm install && pnpm --filter @workspace/api-server run build
-```
-
-**Start Command:**
-```
-node --enable-source-maps ./artifacts/api-server/dist/index.mjs
-```
-
-**Dockerfile Path (ئەگەر Docker بەکار دەهێنیت):**
-```
-Dockerfile.api
+DATABASE_URL   = [لێرەوە کۆپی بکە لە PostgreSQL سێرڤیسەکە]
+JWT_SECRET     = [هەر نووسەیەکی درێژ و ناسراو، نموونە: my-super-secret-key-2026]
+NODE_ENV       = production
+PORT           = 8080
 ```
 
-٤. لە **Variables** تابەکە ئەمانە زیاد بکە:
-
-| ناو | بەها |
-|-----|------|
-| `DATABASE_URL` | بەستەری داتابەیسەکەت |
-| `JWT_SECRET` | هەر نووسەیەکی درێژ و تایبەت |
-| `PORT` | `8080` |
-| `NODE_ENV` | `production` |
+٦. کلیک بکە **Deploy** — چاوەڕێ بکە تا build تەواو بێت
+٧. دواتر لە **Settings → Networking**: دۆمەینی پڕۆژەکەت کۆپی بکە، نموونە:
+   `https://bright-api.up.railway.app`
 
 ---
 
-### گام ٣ — دیپلۆی Frontend
+## گام ٣ — Frontend
 
-١. سێرڤیسی نوێی تریش زیاد بکە لە هەمان پڕۆژەکە
-٢. هەمان Repository هەڵبژێرە
-٣. لە Settings:
+١. دووبارە کلیک بکە **+ New → GitHub Repo** (هەمان Repository)
+٢. بچۆ **Settings → Build**:
+   - **Builder**: Dockerfile
+   - **Dockerfile Path**: `Dockerfile.frontend`
+٣. بچۆ **Variables**:
 
-**Build Command:**
 ```
-pnpm install && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/bright-library run build
+PORT           = 3000
+VITE_API_URL   = https://bright-api.up.railway.app
 ```
+> `VITE_API_URL` ئەو دۆمەینەیە کە لە گام ٢ کۆپیت کردووە
 
-**Start Command:**
-```
-npx serve -s ./artifacts/bright-library/dist/public -l 3000
-```
-
-**Dockerfile Path (ئەگەر Docker بەکار دەهێنیت):**
-```
-Dockerfile.frontend
-```
-
-٤. لە **Variables**:
-
-| ناو | بەها |
-|-----|------|
-| `PORT` | `3000` |
-| `BASE_PATH` | `/` |
-| `VITE_API_URL` | URL-ی API سێرڤیسەکەت (لە Railway دەستت پێدەگات) |
+٤. کلیک بکە **Deploy**
 
 ---
 
-## تێبینییەکان
+## گام ٤ — مایگریشن داتابەیس
 
-- **Database Migration:** دواتر لە دیپلۆی کردن, ئەم کۆمەندە بەکار بهێنە:
-  ```
-  pnpm --filter @workspace/db run push
-  ```
-- **Admin Account:** دواتر لە migration, admin دروست دەکرێت:
-  - Username: `admin`
-  - Password: `admin1234`
-  - **پاشگەڕانەوەی پێویست:** تێپەڕەوشەکە لە پانێلی ئەدمین دەگۆڕیت
+دواتر لە دیپلۆیکردنی API Server، لە **Railway Dashboard → API Service → Settings → Deploy**:
+
+لە **Pre-deploy Command**:
+```
+pnpm --filter @workspace/db run push
+```
+
+ئەمەش تەبڵۆکانی داتابەیس دروست دەکات و ئادمینی دەفاولت زیاد دەکات.
 
 ---
 
-## دیاریکردنی وەشانی pnpm
+## گام ٥ — دەستکردن بە ئادمین
 
-فایلی `package.json` ئێستا `"packageManager": "pnpm@10.26.1"` تێدایە، ئەمەش کێشەی  
-**`Failed to resolve version 9 of pnpm`** چارەسەر دەکات.
+دواتر لە دیپلۆی:
+- **ناوی بەکارهێنەر**: `admin`
+- **تێپەڕەوشە**: `admin1234`
+
+> **گرینگ**: دواتر لە یەکەم چوونەژوورەوە، تێپەڕەوشەکە دەگۆڕیت
+
+---
+
+## تێبینی دەربارەی کێشەی `Failed to resolve version 9 of pnpm`
+
+ئەم کێشەیە چارەسەر کراوە. `package.json` ئێستا هەیەتی:
+```json
+"packageManager": "pnpm@10.26.1"
+```
+Railway ئێستا دەزانێت کام وەشانی pnpm بەکار بهێنێت.
