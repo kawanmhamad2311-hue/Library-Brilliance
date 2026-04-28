@@ -7,7 +7,7 @@
 | `DATABASE_URL` | بەستەری داتابەیس (Railway دابین دەکات) |
 | `JWT_SECRET` | هەر نووسەیەکی درێژ، نموونە: `bright-library-secret-2026` |
 
-هەموو شتی تر لە Dockerfile دادەنێرێت.
+هەموو شتی تر خۆکارە — migration داتابەیس، build، و سێرڤ کردنی ڕووکار.
 
 ---
 
@@ -16,14 +16,14 @@
 ### گام ١ — داتابەیس
 
 ١. بچۆ [railway.app](https://railway.app) → **New Project** → **Deploy PostgreSQL**
-٢. لە Variables tab: `DATABASE_URL` بکۆپی بکە
+٢. لە Variables tab: `DATABASE_URL` کۆپی بکە (یان Railway Variable Reference بەکار بهێنە)
 
 ---
 
 ### گام ٢ — ئەپ (هەردووی API + ڕووکار یەک سێرڤیسە)
 
 ١. لە هەمان پڕۆژەکە: **+ New → GitHub Repo**
-٢. Repository-ەکەت هەڵبژێرە
+٢. Repository-ی `Library-Brilliance` هەڵبژێرە
 ٣. بچۆ **Settings → Build**:
    - **Builder**: Dockerfile
    - **Dockerfile Path**: `Dockerfile`
@@ -34,22 +34,25 @@ DATABASE_URL  =  [لێرەوە لە PostgreSQL سێرڤیس کۆپی بکە]
 JWT_SECRET    =  bright-library-secret-2026
 ```
 
-٥. **Deploy** کلیک بکە — چاوەڕێ بکە تا build تەواو بێت (~٣-٥ خولەک)
+٥. **Deploy** کلیک بکە
 
----
-
-### گام ٣ — مایگریشن داتابەیس
-
-دواتر لە دیپلۆیکردن، بچۆ:  
-**Settings → Deploy → Pre-deploy Command**:
-
-```
-pnpm --filter @workspace/db run push
-```
+> **تێبینی:** دەمێک build دەکات (~٣-٥ خولەک). کاتی دەستپێکردن، migration خۆکار ئەجرا دەبێت.
 
 ---
 
 ## دواتر لە دیپلۆی
 
 - **ئادمین**: ناوی بەکارهێنەر `admin` / تێپەڕەوشە `admin1234`
-- **گرینگ**: تێپەڕەوشەکە دەگۆڕیت لە پانێلی ئادمین
+- **گرینگ**: تێپەڕەوشەکە لە پانێلی ئادمین دەگۆڕیت
+
+---
+
+## نوێکردنەوەی ئەپەکە دواتر
+
+هەر جارێک گۆڕانکاریت کرد لە Replit، لە Shell بنووسە:
+
+```bash
+./deploy.sh "پەیامی دەگۆڕان"
+```
+
+Railway خۆکار دووبارە دیپلۆی دەکات.
