@@ -344,6 +344,20 @@ export const GetStorageObjectParams = zod.object({
 });
 
 /**
+ * @summary Get count of unread feedback submissions (admin only)
+ */
+export const GetUnreadFeedbackCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark all feedback submissions as read (admin only)
+ */
+export const MarkAllFeedbackReadResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
  * @summary List all feedback across all books (admin only)
  */
 export const ListAdminFeedbackResponseItem = zod.object({
@@ -356,6 +370,7 @@ export const ListAdminFeedbackResponseItem = zod.object({
   userDepartment: zod.string(),
   content: zod.string(),
   createdAt: zod.coerce.date(),
+  isRead: zod.boolean(),
 });
 export const ListAdminFeedbackResponse = zod.array(
   ListAdminFeedbackResponseItem,

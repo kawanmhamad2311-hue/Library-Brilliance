@@ -166,6 +166,24 @@ router.delete("/admin/users/:id", requireAdmin, async (req, res) => {
   res.json({ success: true });
 });
 
+router.get("/admin/feedback/unread-count", requireAdmin, async (_req, res) => {
+  const [result] = await db
+    .select({ value: count() })
+    .from(feedbackTable)
+    .where(eq(feedbackTable.isRead, false));
+
+  res.json({ count: result.value });
+});
+
+router.post("/admin/feedback/mark-all-read", requireAdmin, async (_req, res) => {
+  await db
+    .update(feedbackTable)
+    .set({ isRead: true })
+    .where(eq(feedbackTable.isRead, false));
+
+  res.json({ success: true });
+});
+
 router.get("/admin/feedback", requireAdmin, async (_req, res) => {
   const feedbackRows = await db
     .select({
@@ -178,6 +196,7 @@ router.get("/admin/feedback", requireAdmin, async (_req, res) => {
       userDepartment: usersTable.department,
       content: feedbackTable.content,
       createdAt: feedbackTable.createdAt,
+      isRead: feedbackTable.isRead,
     })
     .from(feedbackTable)
     .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))

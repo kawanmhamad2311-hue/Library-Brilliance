@@ -718,6 +718,56 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /admin/feedback/unread-count:
+    get:
+      operationId: getUnreadFeedbackCount
+      tags: [admin]
+      summary: Get count of unread feedback submissions (admin only)
+      responses:
+        "200":
+          description: Unread feedback count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountResponse"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/feedback/mark-all-read:
+    post:
+      operationId: markAllFeedbackRead
+      tags: [admin]
+      summary: Mark all feedback submissions as read (admin only)
+      responses:
+        "200":
+          description: All feedback marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/feedback:
     get:
       operationId: listAdminFeedback
@@ -1107,6 +1157,8 @@ components:
         createdAt:
           type: string
           format: date-time
+        isRead:
+          type: boolean
       required:
         - id
         - bookId
@@ -1117,3 +1169,4 @@ components:
         - userDepartment
         - content
         - createdAt
+        - isRead

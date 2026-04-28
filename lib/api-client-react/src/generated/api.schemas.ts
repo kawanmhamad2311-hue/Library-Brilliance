@@ -165,6 +165,7 @@ export interface AdminFeedbackItem {
   userDepartment: string;
   content: string;
   createdAt: string;
+  isRead: boolean;
 }
 
 export type ListBooksParams = {

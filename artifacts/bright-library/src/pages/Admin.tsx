@@ -16,6 +16,8 @@ import {
   useListAdminFeedback,
   useGetUnreadNotificationsCount,
   useMarkAllNotificationsRead,
+  useGetUnreadFeedbackCount,
+  useMarkAllFeedbackRead,
   useDeactivateUser,
   useReactivateUser,
   useDeleteUser,
@@ -54,6 +56,7 @@ import {
   getListDownloadsQueryKey, getListUsersQueryKey,
   getListAdminFeedbackQueryKey,
   getGetUnreadNotificationsCountQueryKey,
+  getGetUnreadFeedbackCountQueryKey,
 } from "@workspace/api-client-react";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -148,6 +151,18 @@ export default function Admin() {
   const unreadCount = unreadData?.count ?? 0;
 
   const markAllReadMutation = useMarkAllNotificationsRead();
+
+  const { data: unreadFeedbackData } = useGetUnreadFeedbackCount({
+    query: {
+      queryKey: getGetUnreadFeedbackCountQueryKey(),
+      enabled: !!user && user.role === "admin",
+      refetchInterval: 30000,
+    }
+  });
+
+  const unreadFeedbackCount = unreadFeedbackData?.count ?? 0;
+
+  const markAllFeedbackReadMutation = useMarkAllFeedbackRead();
 
   const createBookMutation = useCreateBook();
   const deleteBookMutation = useDeleteBook();
@@ -301,6 +316,16 @@ export default function Admin() {
         queryClient.invalidateQueries({ queryKey: getGetUnreadNotificationsCountQueryKey() });
         queryClient.invalidateQueries({ queryKey: getListDownloadsQueryKey() });
         toast({ title: "هەموو ئاگادارییەکان خوێندرانەوە" });
+      },
+    });
+  }
+
+  function handleMarkAllFeedbackRead() {
+    markAllFeedbackReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetUnreadFeedbackCountQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListAdminFeedbackQueryKey() });
+        toast({ title: "هەموو سەرنجەکان خوێندرانەوە" });
       },
     });
   }
@@ -561,7 +586,14 @@ export default function Admin() {
               )}
             </TabsTrigger>
             <TabsTrigger value="users" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">قوتابیان</TabsTrigger>
-            <TabsTrigger value="feedback" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">سەرنجەکان</TabsTrigger>
+            <TabsTrigger value="feedback" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm relative">
+              سەرنجەکان
+              {unreadFeedbackCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                  {unreadFeedbackCount > 99 ? "99+" : unreadFeedbackCount}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="books" className="mt-6">
@@ -989,9 +1021,34 @@ export default function Admin() {
 
           <TabsContent value="feedback" className="mt-6">
             <Card className="border-border/50 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl">هەموو سەرنجەکان</CardTitle>
-                <CardDescription>سەرنجی قوتابیان لەسەر کتێبەکان</CardDescription>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+                <div>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    هەموو سەرنجەکان
+                    {unreadFeedbackCount > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        {unreadFeedbackCount} نوێ
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>سەرنجی قوتابیان لەسەر کتێبەکان</CardDescription>
+                </div>
+                {unreadFeedbackCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 shrink-0"
+                    onClick={handleMarkAllFeedbackRead}
+                    disabled={markAllFeedbackReadMutation.isPending}
+                  >
+                    {markAllFeedbackReadMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                    هەموویان خوێندەوە
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border overflow-x-auto">
@@ -1012,7 +1069,7 @@ export default function Admin() {
                         <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">هیچ سەرنجێک تۆمار نەکراوە</TableCell></TableRow>
                       ) : (
                         allFeedback?.map((fb) => (
-                          <TableRow key={fb.id}>
+                          <TableRow key={fb.id} className={!fb.isRead ? "bg-primary/5 font-medium" : undefined}>
                             <TableCell className="font-medium max-w-[150px] truncate">{fb.bookTitle}</TableCell>
                             <TableCell>{fb.userName}</TableCell>
                             <TableCell className="hidden md:table-cell">

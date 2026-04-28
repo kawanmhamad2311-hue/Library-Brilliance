@@ -2025,6 +2025,163 @@ export function useGetStorageObject<
 }
 
 /**
+ * @summary Get count of unread feedback submissions (admin only)
+ */
+export const getGetUnreadFeedbackCountUrl = () => {
+  return `/api/admin/feedback/unread-count`;
+};
+
+export const getUnreadFeedbackCount = async (
+  options?: RequestInit,
+): Promise<UnreadCountResponse> => {
+  return customFetch<UnreadCountResponse>(getGetUnreadFeedbackCountUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUnreadFeedbackCountQueryKey = () => {
+  return [`/api/admin/feedback/unread-count`] as const;
+};
+
+export const getGetUnreadFeedbackCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUnreadFeedbackCount>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadFeedbackCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetUnreadFeedbackCountQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getUnreadFeedbackCount>>
+  > = ({ signal }) => getUnreadFeedbackCount({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadFeedbackCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetUnreadFeedbackCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUnreadFeedbackCount>>
+>;
+export type GetUnreadFeedbackCountQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get count of unread feedback submissions (admin only)
+ */
+
+export function useGetUnreadFeedbackCount<
+  TData = Awaited<ReturnType<typeof getUnreadFeedbackCount>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadFeedbackCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUnreadFeedbackCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark all feedback submissions as read (admin only)
+ */
+export const getMarkAllFeedbackReadUrl = () => {
+  return `/api/admin/feedback/mark-all-read`;
+};
+
+export const markAllFeedbackRead = async (
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getMarkAllFeedbackReadUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getMarkAllFeedbackReadMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllFeedbackRead>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markAllFeedbackRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["markAllFeedbackRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markAllFeedbackRead>>,
+    void
+  > = () => {
+    return markAllFeedbackRead(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkAllFeedbackReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markAllFeedbackRead>>
+>;
+
+export type MarkAllFeedbackReadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Mark all feedback submissions as read (admin only)
+ */
+export const useMarkAllFeedbackRead = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllFeedbackRead>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markAllFeedbackRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getMarkAllFeedbackReadMutationOptions(options));
+};
+
+/**
  * @summary List all feedback across all books (admin only)
  */
 export const getListAdminFeedbackUrl = () => {
