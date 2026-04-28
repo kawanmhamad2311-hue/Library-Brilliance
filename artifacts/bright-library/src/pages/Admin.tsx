@@ -11,7 +11,9 @@ import {
   useCreateBook,
   useDeleteBook,
   useListBooks,
-  useListAdminFeedback
+  useListAdminFeedback,
+  useGetUnreadNotificationsCount,
+  useMarkAllNotificationsRead,
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { DEPARTMENTS } from "@/pages/Register";
@@ -44,7 +46,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { 
   getGetAdminStatsQueryKey, getListBooksQueryKey,
   getListDownloadsQueryKey, getListUsersQueryKey,
-  getListAdminFeedbackQueryKey
+  getListAdminFeedbackQueryKey,
+  getGetUnreadNotificationsCountQueryKey,
 } from "@workspace/api-client-react";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
@@ -111,6 +114,18 @@ export default function Admin() {
   const { data: allFeedback, isLoading: isFeedbackLoading } = useListAdminFeedback({
     query: { queryKey: getListAdminFeedbackQueryKey(), enabled: !!user && user.role === "admin" }
   });
+
+  const { data: unreadData } = useGetUnreadNotificationsCount({
+    query: {
+      queryKey: getGetUnreadNotificationsCountQueryKey(),
+      enabled: !!user && user.role === "admin",
+      refetchInterval: 30000,
+    }
+  });
+
+  const unreadCount = unreadData?.count ?? 0;
+
+  const markAllReadMutation = useMarkAllNotificationsRead();
 
   const createBookMutation = useCreateBook();
   const deleteBookMutation = useDeleteBook();
@@ -241,6 +256,16 @@ export default function Admin() {
     });
   }
 
+  function handleMarkAllRead() {
+    markAllReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getGetUnreadNotificationsCountQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListDownloadsQueryKey() });
+        toast({ title: "هەموو ئاگادارییەکان خوێندرانەوە" });
+      },
+    });
+  }
+
   function handleDeleteBook(id: number) {
     if (confirm("دڵنیای لە سڕینەوەی ئەم کتێبە؟")) {
       deleteBookMutation.mutate({ id }, {
@@ -321,7 +346,14 @@ export default function Admin() {
         <Tabs defaultValue="books" dir="rtl" className="w-full">
           <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="books" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">کتێبەکان</TabsTrigger>
-            <TabsTrigger value="downloads" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">دابەزاندنەکان</TabsTrigger>
+            <TabsTrigger value="downloads" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm relative">
+              دابەزاندنەکان
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="users" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">قوتابیان</TabsTrigger>
             <TabsTrigger value="feedback" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">سەرنجەکان</TabsTrigger>
           </TabsList>
@@ -549,9 +581,34 @@ export default function Admin() {
 
           <TabsContent value="downloads" className="mt-6">
             <Card className="border-border/50 shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xl">دوایین دابەزاندنەکان</CardTitle>
-                <CardDescription>بەدواداچوون بۆ ئەو قوتابیانەی کتێب دادەبەزێنن</CardDescription>
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+                <div>
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    دوایین دابەزاندنەکان
+                    {unreadCount > 0 && (
+                      <Badge variant="destructive" className="text-xs">
+                        {unreadCount} نوێ
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>بەدواداچوون بۆ ئەو قوتابیانەی کتێب دادەبەزێنن</CardDescription>
+                </div>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 shrink-0"
+                    onClick={handleMarkAllRead}
+                    disabled={markAllReadMutation.isPending}
+                  >
+                    {markAllReadMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle className="h-4 w-4" />
+                    )}
+                    هەموویان خوێندەوە
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 <div className="rounded-md border overflow-x-auto">
@@ -571,8 +628,15 @@ export default function Admin() {
                         <TableRow><TableCell colSpan={4} className="h-24 text-center text-muted-foreground">هیچ دابەزاندنێک تۆمار نەکراوە</TableCell></TableRow>
                       ) : (
                         recentDownloads?.map((dl) => (
-                          <TableRow key={dl.id}>
-                            <TableCell className="font-medium truncate max-w-[200px]">{dl.bookTitle}</TableCell>
+                          <TableRow key={dl.id} className={!dl.isRead ? "bg-primary/5 font-medium" : undefined}>
+                            <TableCell className="font-medium truncate max-w-[200px]">
+                              <div className="flex items-center gap-2">
+                                {!dl.isRead && (
+                                  <span className="w-2 h-2 rounded-full bg-primary shrink-0" />
+                                )}
+                                {dl.bookTitle}
+                              </div>
+                            </TableCell>
                             <TableCell>{dl.userName}</TableCell>
                             <TableCell className="hidden md:table-cell">
                               <div className="flex flex-col gap-1 text-xs">

@@ -106,6 +106,11 @@ export interface DownloadEvent {
   userDepartment: string;
   userBadgeCode: string;
   downloadedAt: string;
+  isRead: boolean;
+}
+
+export interface UnreadCountResponse {
+  count: number;
 }
 
 export interface DepartmentCount {

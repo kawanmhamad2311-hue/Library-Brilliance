@@ -339,6 +339,56 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/notifications/unread-count:
+    get:
+      operationId: getUnreadNotificationsCount
+      tags: [admin]
+      summary: Get count of unread download notifications (admin only)
+      responses:
+        "200":
+          description: Unread notification count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnreadCountResponse"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/notifications/mark-all-read:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [admin]
+      summary: Mark all download notifications as read (admin only)
+      responses:
+        "200":
+          description: All notifications marked as read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -747,6 +797,8 @@ components:
         downloadedAt:
           type: string
           format: date-time
+        isRead:
+          type: boolean
       required:
         - id
         - bookId
@@ -756,6 +808,15 @@ components:
         - userDepartment
         - userBadgeCode
         - downloadedAt
+        - isRead
+
+    UnreadCountResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count
 
     AdminStats:
       type: object

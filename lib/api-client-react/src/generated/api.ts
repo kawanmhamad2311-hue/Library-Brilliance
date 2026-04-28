@@ -33,6 +33,7 @@ import type {
   LoginBody,
   RegisterBody,
   SuccessResponse,
+  UnreadCountResponse,
   UploadCoverBody,
   UploadCoverResponse,
   UploadUrlRequest,
@@ -1120,6 +1121,164 @@ export function useListDownloads<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Get count of unread download notifications (admin only)
+ */
+export const getGetUnreadNotificationsCountUrl = () => {
+  return `/api/admin/notifications/unread-count`;
+};
+
+export const getUnreadNotificationsCount = async (
+  options?: RequestInit,
+): Promise<UnreadCountResponse> => {
+  return customFetch<UnreadCountResponse>(getGetUnreadNotificationsCountUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUnreadNotificationsCountQueryKey = () => {
+  return [`/api/admin/notifications/unread-count`] as const;
+};
+
+export const getGetUnreadNotificationsCountQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUnreadNotificationsCount>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadNotificationsCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetUnreadNotificationsCountQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getUnreadNotificationsCount>>
+  > = ({ signal }) =>
+    getUnreadNotificationsCount({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadNotificationsCount>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetUnreadNotificationsCountQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUnreadNotificationsCount>>
+>;
+export type GetUnreadNotificationsCountQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get count of unread download notifications (admin only)
+ */
+
+export function useGetUnreadNotificationsCount<
+  TData = Awaited<ReturnType<typeof getUnreadNotificationsCount>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUnreadNotificationsCount>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUnreadNotificationsCountQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark all download notifications as read (admin only)
+ */
+export const getMarkAllNotificationsReadUrl = () => {
+  return `/api/admin/notifications/mark-all-read`;
+};
+
+export const markAllNotificationsRead = async (
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getMarkAllNotificationsReadUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getMarkAllNotificationsReadMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllNotificationsRead>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof markAllNotificationsRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["markAllNotificationsRead"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof markAllNotificationsRead>>,
+    void
+  > = () => {
+    return markAllNotificationsRead(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type MarkAllNotificationsReadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof markAllNotificationsRead>>
+>;
+
+export type MarkAllNotificationsReadMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Mark all download notifications as read (admin only)
+ */
+export const useMarkAllNotificationsRead = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof markAllNotificationsRead>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof markAllNotificationsRead>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getMarkAllNotificationsReadMutationOptions(options));
+};
 
 /**
  * @summary Get admin dashboard statistics

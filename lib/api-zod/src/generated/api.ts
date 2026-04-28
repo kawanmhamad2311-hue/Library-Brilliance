@@ -189,8 +189,23 @@ export const ListDownloadsResponseItem = zod.object({
   userDepartment: zod.string(),
   userBadgeCode: zod.string(),
   downloadedAt: zod.coerce.date(),
+  isRead: zod.boolean(),
 });
 export const ListDownloadsResponse = zod.array(ListDownloadsResponseItem);
+
+/**
+ * @summary Get count of unread download notifications (admin only)
+ */
+export const GetUnreadNotificationsCountResponse = zod.object({
+  count: zod.number(),
+});
+
+/**
+ * @summary Mark all download notifications as read (admin only)
+ */
+export const MarkAllNotificationsReadResponse = zod.object({
+  success: zod.boolean(),
+});
 
 /**
  * @summary Get admin dashboard statistics
@@ -216,6 +231,7 @@ export const GetAdminStatsResponse = zod.object({
       userDepartment: zod.string(),
       userBadgeCode: zod.string(),
       downloadedAt: zod.coerce.date(),
+      isRead: zod.boolean(),
     }),
   ),
 });

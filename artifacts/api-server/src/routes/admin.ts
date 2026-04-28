@@ -16,6 +16,7 @@ router.get("/admin/downloads", requireAdmin, async (_req, res) => {
       userDepartment: usersTable.department,
       userBadgeCode: usersTable.badgeCode,
       downloadedAt: downloadsTable.downloadedAt,
+      isRead: downloadsTable.isRead,
     })
     .from(downloadsTable)
     .innerJoin(usersTable, eq(downloadsTable.userId, usersTable.id))
@@ -23,6 +24,24 @@ router.get("/admin/downloads", requireAdmin, async (_req, res) => {
     .orderBy(desc(downloadsTable.downloadedAt));
 
   res.json(downloads);
+});
+
+router.get("/admin/notifications/unread-count", requireAdmin, async (_req, res) => {
+  const [result] = await db
+    .select({ value: count() })
+    .from(downloadsTable)
+    .where(eq(downloadsTable.isRead, false));
+
+  res.json({ count: result.value });
+});
+
+router.post("/admin/notifications/mark-all-read", requireAdmin, async (_req, res) => {
+  await db
+    .update(downloadsTable)
+    .set({ isRead: true })
+    .where(eq(downloadsTable.isRead, false));
+
+  res.json({ success: true });
 });
 
 router.get("/admin/stats", requireAdmin, async (_req, res) => {
@@ -46,6 +65,7 @@ router.get("/admin/stats", requireAdmin, async (_req, res) => {
       userDepartment: usersTable.department,
       userBadgeCode: usersTable.badgeCode,
       downloadedAt: downloadsTable.downloadedAt,
+      isRead: downloadsTable.isRead,
     })
     .from(downloadsTable)
     .innerJoin(usersTable, eq(downloadsTable.userId, usersTable.id))
