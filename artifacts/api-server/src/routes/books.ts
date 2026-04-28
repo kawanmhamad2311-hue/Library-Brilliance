@@ -1,32 +1,29 @@
 import { Router } from "express";
-import { db, booksTable, downloadsTable, usersTable } from "@workspace/db";
+import { db, booksTable, downloadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { CreateBookBody, ListBooksQueryParams, GetBookParams, DeleteBookParams, DownloadBookParams } from "@workspace/api-zod";
+import { CreateBookBody, GetBookParams, DeleteBookParams, DownloadBookParams } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth";
 
 const router = Router();
 
-router.get("/books", async (req, res) => {
-  const parsed = ListBooksQueryParams.safeParse(req.query);
-  const department = parsed.success ? parsed.data.department : undefined;
+router.get("/books", requireAuth, async (req, res) => {
+  const isAdmin = req.user.role === "admin";
 
-  let books;
-  if (department) {
-    books = await db.select().from(booksTable).where(eq(booksTable.department, department));
-  } else {
-    books = await db.select().from(booksTable);
+  if (isAdmin) {
+    const departmentParam = req.query.department as string | undefined;
+    const books = departmentParam
+      ? await db.select().from(booksTable).where(eq(booksTable.department, departmentParam))
+      : await db.select().from(booksTable);
+    res.json(books.map(mapBook));
+    return;
   }
 
-  res.json(books.map(b => ({
-    id: b.id,
-    title: b.title,
-    author: b.author,
-    description: b.description,
-    department: b.department,
-    pdfUrl: b.pdfUrl,
-    createdAt: b.createdAt,
-    downloadCount: b.downloadCount,
-  })));
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.department, req.user.department));
+
+  res.json(books.map(mapBook));
 });
 
 router.post("/books", requireAdmin, async (req, res) => {
@@ -36,40 +33,33 @@ router.post("/books", requireAdmin, async (req, res) => {
     return;
   }
   const [book] = await db.insert(booksTable).values(parsed.data).returning();
-  res.status(201).json({
-    id: book.id,
-    title: book.title,
-    author: book.author,
-    description: book.description,
-    department: book.department,
-    pdfUrl: book.pdfUrl,
-    createdAt: book.createdAt,
-    downloadCount: book.downloadCount,
-  });
+  res.status(201).json(mapBook(book));
 });
 
-router.get("/books/:id", async (req, res) => {
+router.get("/books/:id", requireAuth, async (req, res) => {
   const parsed = GetBookParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid book ID" });
     return;
   }
-  const books = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id)).limit(1);
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.id, parsed.data.id))
+    .limit(1);
+
   if (books.length === 0) {
     res.status(404).json({ error: "Book not found" });
     return;
   }
   const book = books[0];
-  res.json({
-    id: book.id,
-    title: book.title,
-    author: book.author,
-    description: book.description,
-    department: book.department,
-    pdfUrl: book.pdfUrl,
-    createdAt: book.createdAt,
-    downloadCount: book.downloadCount,
-  });
+
+  if (req.user.role !== "admin" && book.department !== req.user.department) {
+    res.status(403).json({ error: "Access denied: book belongs to a different department" });
+    return;
+  }
+
+  res.json(mapBook(book));
 });
 
 router.delete("/books/:id", requireAdmin, async (req, res) => {
@@ -78,7 +68,12 @@ router.delete("/books/:id", requireAdmin, async (req, res) => {
     res.status(400).json({ error: "Invalid book ID" });
     return;
   }
-  const books = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id)).limit(1);
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.id, parsed.data.id))
+    .limit(1);
+
   if (books.length === 0) {
     res.status(404).json({ error: "Book not found" });
     return;
@@ -93,36 +88,50 @@ router.post("/books/:id/download", requireAuth, async (req, res) => {
     res.status(400).json({ error: "Invalid book ID" });
     return;
   }
-  const books = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id)).limit(1);
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.id, parsed.data.id))
+    .limit(1);
+
   if (books.length === 0) {
     res.status(404).json({ error: "Book not found" });
     return;
   }
   const book = books[0];
-  const user = (req as any).user;
+
+  if (req.user.role !== "admin" && book.department !== req.user.department) {
+    res.status(403).json({ error: "Access denied: book belongs to a different department" });
+    return;
+  }
 
   await db.insert(downloadsTable).values({
-    userId: user.id,
+    userId: req.user.id,
     bookId: book.id,
   });
 
-  await db.update(booksTable)
+  await db
+    .update(booksTable)
     .set({ downloadCount: sql`${booksTable.downloadCount} + 1` })
     .where(eq(booksTable.id, book.id));
 
   res.json({
     pdfUrl: book.pdfUrl,
-    book: {
-      id: book.id,
-      title: book.title,
-      author: book.author,
-      description: book.description,
-      department: book.department,
-      pdfUrl: book.pdfUrl,
-      createdAt: book.createdAt,
-      downloadCount: book.downloadCount + 1,
-    },
+    book: mapBook({ ...book, downloadCount: book.downloadCount + 1 }),
   });
 });
+
+function mapBook(b: typeof booksTable.$inferSelect) {
+  return {
+    id: b.id,
+    title: b.title,
+    author: b.author,
+    description: b.description,
+    department: b.department,
+    pdfUrl: b.pdfUrl,
+    createdAt: b.createdAt,
+    downloadCount: b.downloadCount,
+  };
+}
 
 export default router;

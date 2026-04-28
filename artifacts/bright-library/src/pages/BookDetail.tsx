@@ -30,12 +30,12 @@ export default function BookDetail() {
   const [feedbackContent, setFeedbackContent] = useState("");
 
   const { data: book, isLoading: isBookLoading } = useGetBook(bookId, {
-    query: { enabled: !!bookId }
+    query: { queryKey: getGetBookQueryKey(bookId), enabled: !!bookId }
   });
 
   const { data: feedbacks, isLoading: isFeedbackLoading } = useListFeedback(
     { bookId },
-    { query: { enabled: !!bookId } }
+    { query: { queryKey: getListFeedbackQueryKey({ bookId }), enabled: !!bookId } }
   );
 
   const downloadMutation = useDownloadBook();

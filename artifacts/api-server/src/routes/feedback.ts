@@ -50,8 +50,6 @@ router.post("/feedback", requireAuth, async (req, res) => {
     res.status(400).json({ error: "Invalid request body" });
     return;
   }
-  const user = (req as any).user;
-
   const books = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.bookId)).limit(1);
   if (books.length === 0) {
     res.status(404).json({ error: "Book not found" });
@@ -60,7 +58,7 @@ router.post("/feedback", requireAuth, async (req, res) => {
   const book = books[0];
 
   const [feedback] = await db.insert(feedbackTable).values({
-    userId: user.id,
+    userId: req.user.id,
     bookId: parsed.data.bookId,
     content: parsed.data.content,
   }).returning();
@@ -69,8 +67,8 @@ router.post("/feedback", requireAuth, async (req, res) => {
     id: feedback.id,
     bookId: feedback.bookId,
     bookTitle: book.title,
-    userId: user.id,
-    userName: user.name,
+    userId: req.user.id,
+    userName: req.user.name,
     content: feedback.content,
     createdAt: feedback.createdAt,
   });

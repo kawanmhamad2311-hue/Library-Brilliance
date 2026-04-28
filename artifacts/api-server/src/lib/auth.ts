@@ -3,7 +3,14 @@ import { type Request, type Response, type NextFunction } from "express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-const JWT_SECRET = process.env.JWT_SECRET || "bright-library-secret-2024";
+const JWT_SECRET: string = (() => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error("FATAL: JWT_SECRET environment variable is not set");
+    process.exit(1);
+  }
+  return secret;
+})();
 
 export function signToken(userId: number): string {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
@@ -34,14 +41,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     res.status(401).json({ error: "User not found" });
     return;
   }
-  (req as any).user = users[0];
+  req.user = users[0];
   next();
 }
 
 export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   await requireAuth(req, res, async () => {
-    const user = (req as any).user;
-    if (user.role !== "admin") {
+    if (req.user.role !== "admin") {
       res.status(403).json({ error: "Admin access required" });
       return;
     }

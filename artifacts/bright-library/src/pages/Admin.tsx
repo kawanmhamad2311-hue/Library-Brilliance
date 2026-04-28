@@ -39,7 +39,10 @@ import {
   Trash2, Users, LayoutDashboard, FileText
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetAdminStatsQueryKey, getListBooksQueryKey } from "@workspace/api-client-react";
+import { 
+  getGetAdminStatsQueryKey, getListBooksQueryKey,
+  getListDownloadsQueryKey, getListUsersQueryKey
+} from "@workspace/api-client-react";
 
 const bookSchema = z.object({
   title: z.string().min(1, { message: "تکایە ناوی کتێب بنووسە" }),
@@ -61,19 +64,19 @@ export default function Admin() {
   }
 
   const { data: stats, isLoading: isStatsLoading } = useGetAdminStats({
-    query: { enabled: !!user && user.role === "admin" }
+    query: { queryKey: getGetAdminStatsQueryKey(), enabled: !!user && user.role === "admin" }
   });
   
   const { data: recentDownloads, isLoading: isDownloadsLoading } = useListDownloads({
-    query: { enabled: !!user && user.role === "admin" }
+    query: { queryKey: getListDownloadsQueryKey(), enabled: !!user && user.role === "admin" }
   });
   
   const { data: users, isLoading: isUsersLoading } = useListUsers({
-    query: { enabled: !!user && user.role === "admin" }
+    query: { queryKey: getListUsersQueryKey(), enabled: !!user && user.role === "admin" }
   });
 
   const { data: books, isLoading: isBooksLoading } = useListBooks(undefined, {
-    query: { enabled: !!user && user.role === "admin" }
+    query: { queryKey: getListBooksQueryKey(), enabled: !!user && user.role === "admin" }
   });
 
   const createBookMutation = useCreateBook();

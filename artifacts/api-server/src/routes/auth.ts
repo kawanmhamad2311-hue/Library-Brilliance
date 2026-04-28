@@ -117,15 +117,14 @@ router.post("/auth/logout", (_req, res) => {
 });
 
 router.get("/auth/me", requireAuth, (req, res) => {
-  const user = (req as any).user;
   res.json({
-    id: user.id,
-    name: user.name,
-    username: user.username,
-    department: user.department,
-    badgeCode: user.badgeCode,
-    role: user.role,
-    createdAt: user.createdAt,
+    id: req.user.id,
+    name: req.user.name,
+    username: req.user.username,
+    department: req.user.department,
+    badgeCode: req.user.badgeCode,
+    role: req.user.role,
+    createdAt: req.user.createdAt,
   });
 });
 
