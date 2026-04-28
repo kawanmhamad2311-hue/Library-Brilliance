@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "کتێبخانەی بڕایت"
+version = "1.0.0"
+id = "artifacts/bright-library"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25842
+
+[services.development]
+run = "pnpm --filter @workspace/bright-library run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bright-library", "run", "build" ]
+publicDir = "artifacts/bright-library/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25842"
+BASE_PATH = "/"
