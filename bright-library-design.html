@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>کتێبخانەی بڕایت</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #1b3a6b;
+      --primary-light: #2a5298;
+      --primary-hover: #142d55;
+      --secondary: #c9a84c;
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-light: rgba(226,232,240,0.5);
+      --muted: #64748b;
+      --muted-bg: #f1f5f9;
+      --muted-bg2: rgba(241,245,249,0.5);
+      --text: #0f172a;
+      --text-light: #475569;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --warning-bg: #fffbeb;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --radius-lg: 16px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.06);
+      --transition: 0.2s ease;
+    }
+
+    body {
+      font-family: 'Noto Kufi Arabic', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ========== NAV ========== */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .navbar-inner {
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 60px;
+    }
+    .navbar-brand {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--primary); font-weight: 700; font-size: 17px;
+    }
+    .navbar-logo {
+      width: 36px; height: 36px; border-radius: 8px; object-fit: cover;
+      background: var(--primary); display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+    .navbar-links { display: flex; align-items: center; gap: 4px; }
+    .nav-link {
+      padding: 6px 14px; border-radius: var(--radius-sm); text-decoration: none;
+      color: var(--muted); font-size: 14px; font-weight: 500;
+      transition: background var(--transition), color var(--transition); cursor: pointer;
+    }
+    .nav-link:hover, .nav-link.active { background: var(--muted-bg); color: var(--primary); }
+    .navbar-user {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .user-badge {
+      background: var(--primary); color: #fff;
+      padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    }
+    .btn-logout {
+      background: transparent; border: 1px solid var(--border);
+      padding: 5px 12px; border-radius: var(--radius-sm);
+      font-size: 13px; color: var(--muted); cursor: pointer;
+      transition: all var(--transition); font-family: inherit;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); background: var(--danger-bg); }
+
+    /* ========== PAGE CONTAINER ========== */
+    .page { display: none; }
+    .page.active { display: block; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+    /* ========== BUTTONS ========== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 9px 20px; border-radius: var(--radius-sm); font-size: 14px;
+      font-weight: 600; cursor: pointer; border: none; transition: all var(--transition);
+      font-family: inherit; text-decoration: none; line-height: 1;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--muted-bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #e2e8f0; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+    .btn-outline:hover { background: var(--primary); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn-lg { padding: 12px 28px; font-size: 16px; }
+    .btn-full { width: 100%; }
+
+    /* ========== FORM ========== */
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+    label { font-size: 14px; font-weight: 600; color: var(--text); }
+    .input, .textarea, .select {
+      width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      font-size: 14px; font-family: inherit; color: var(--text); background: var(--surface);
+      transition: border-color var(--transition), box-shadow var(--transition); outline: none;
+    }
+    .input:focus, .textarea:focus, .select:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,107,0.1);
+    }
+    .textarea { resize: vertical; min-height: 90px; }
+    .input-error { border-color: var(--danger); }
+    .error-msg { font-size: 12px; color: var(--danger); }
+
+    /* ========== CARD ========== */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .card-header { padding: 20px 24px 0; }
+    .card-body { padding: 20px 24px; }
+    .card-footer { padding: 16px 24px; border-top: 1px solid var(--border-light); }
+    .card-title { font-size: 20px; font-weight: 700; color: var(--primary); }
+    .card-desc { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+    /* ========== BADGE ========== */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    }
+    .badge-secondary { background: #e2e8f0; color: var(--text-light); }
+    .badge-primary { background: var(--primary); color: #fff; }
+    .badge-danger { background: var(--danger); color: #fff; }
+    .badge-success { background: #dcfce7; color: var(--success); }
+
+    /* ========== LOGIN PAGE ========== */
+    .login-wrap {
+      min-height: calc(100vh - 0px);
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg, #f0f4ff 0%, #f5f7fa 100%);
+    }
+    .login-card { width: 100%; max-width: 420px; }
+    .login-logo-wrap {
+      display: flex; justify-content: center; margin-bottom: 16px;
+    }
+    .login-logo {
+      width: 80px; height: 80px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-md); overflow: hidden;
+    }
+    .login-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .login-logo-text { color: #fff; font-size: 22px; font-weight: 800; }
+    .login-title { text-align: center; font-size: 22px; font-weight: 700; color: var(--primary); }
+    .login-subtitle { text-align: center; font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+    .login-footer { text-align: center; font-size: 14px; color: var(--muted); }
+    .link { color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .link:hover { text-decoration: underline; }
+
+    /* ========== LIBRARY ========== */
+    .lib-header {
+      display: flex; flex-wrap: wrap; justify-content: space-between;
+      align-items: center; gap: 16px; margin-bottom: 24px;
+    }
+    .lib-title { font-size: 28px; font-weight: 800; color: var(--primary); }
+    .lib-subtitle { font-size: 14px; color: var(--muted); margin-top: 2px; }
+    .search-wrap { position: relative; }
+    .search-wrap .input { padding-right: 38px; min-width: 260px; }
+    .search-icon {
+      position: absolute; right: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none;
+    }
+    .tabs-wrap { overflow-x: auto; padding-bottom: 4px; margin-bottom: 24px; }
+    .tabs { display: flex; gap: 4px; background: var(--muted-bg); padding: 4px; border-radius: var(--radius-sm); width: max-content; min-width: 100%; }
+    .tab-btn {
+      padding: 6px 16px; border-radius: 4px; border: none; background: transparent;
+      font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer;
+      transition: all var(--transition); font-family: inherit; white-space: nowrap;
+    }
+    .tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow); font-weight: 600; }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    .books-grid {
+      display: grid; gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+    .book-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; transition: box-shadow var(--transition);
+    }
+    .book-card:hover { box-shadow: var(--shadow-md); }
+    .book-cover {
+      aspect-ratio: 4/3; background: linear-gradient(135deg, rgba(27,58,107,0.05) 0%, rgba(27,58,107,0.1) 100%);
+      position: relative; display: flex; align-items: center; justify-content: center;
+      padding: 20px; border-bottom: 1px solid var(--border-light); overflow: hidden;
+    }
+    .book-cover img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .book-cover-inner {
+      width: 100%; height: 100%; background: #fff; border-radius: 4px;
+      border: 1px solid var(--border); display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 12px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .book-cover-stripe {
+      position: absolute; top: 0; right: 0; left: 0; height: 6px;
+      background: var(--secondary);
+    }
+    .book-cover-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.3; }
+    .book-cover-title { font-size: 12px; font-weight: 700; line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+    .book-dept-badge {
+      position: absolute; top: 10px; right: 10px; z-index: 2;
+      background: rgba(241,245,249,0.95); color: var(--text-light);
+      padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+    }
+    .book-info { padding: 14px; flex: 1; display: flex; flex-direction: column; }
+    .book-name { font-size: 15px; font-weight: 700; line-height: 1.4; margin-bottom: 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .book-author { font-size: 13px; color: var(--muted); margin-bottom: auto; }
+    .book-downloads { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+    .book-actions { padding: 12px 14px; border-top: 1px solid var(--border-light); background: var(--muted-bg2); }
+
+    /* ========== BOOK DETAIL ========== */
+    .detail-grid { display: grid; grid-template-columns: 280px 1fr; gap: 32px; align-items: start; }
+    @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
+    .detail-cover {
+      aspect-ratio: 3/4; border-radius: var(--radius); overflow: hidden;
+      border: 1px solid var(--border); box-shadow: var(--shadow-md);
+      background: linear-gradient(135deg, rgba(27,58,107,0.05) 0%, rgba(27,58,107,0.1) 100%);
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .detail-cover img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-cover-inner {
+      width: calc(100% - 48px); height: calc(100% - 48px);
+      background: #fff; border-radius: 8px; border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; text-align: center; position: relative; overflow: hidden;
+    }
+    .detail-cover-stripe { position: absolute; top: 0; right: 0; left: 0; height: 10px; background: var(--secondary); }
+    .detail-cover-icon { font-size: 56px; opacity: 0.25; margin-bottom: 12px; }
+    .detail-cover-title { font-size: 18px; font-weight: 700; }
+    .detail-cover-author { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .detail-title { font-size: 30px; font-weight: 800; color: var(--primary); line-height: 1.3; margin-bottom: 8px; }
+    .detail-author { font-size: 16px; color: var(--muted); margin-bottom: 16px; }
+    .detail-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .detail-meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+    .detail-desc { font-size: 15px; line-height: 1.8; color: var(--text-light); border-top: 1px solid var(--border); padding-top: 20px; margin-top: 20px; }
+    .download-card { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* ========== FEEDBACK ========== */
+    .feedback-list { display: flex; flex-direction: column; gap: 16px; }
+    .feedback-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow);
+    }
+    .feedback-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .feedback-user { display: flex; align-items: center; gap: 10px; }
+    .feedback-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; flex-shrink: 0;
+    }
+    .feedback-name { font-weight: 600; font-size: 14px; }
+    .feedback-dept { font-size: 12px; color: var(--muted); }
+    .feedback-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+    .feedback-content { font-size: 14px; line-height: 1.7; color: var(--text-light); }
+    .feedback-book { font-size: 13px; color: var(--primary); margin-bottom: 8px; font-weight: 500; }
+
+    /* ========== ADMIN ========== */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .stat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .stat-icon-blue { background: #dbeafe; }
+    .stat-icon-green { background: #dcfce7; }
+    .stat-icon-yellow { background: #fef9c3; }
+    .stat-icon-purple { background: #f3e8ff; }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .admin-tabs .tabs { width: 100%; }
+    .admin-tab-content { display: none; margin-top: 24px; }
+    .admin-tab-content.active { display: block; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { padding: 10px 14px; text-align: right; font-weight: 600; font-size: 13px; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border-light); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--muted-bg2); }
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      background: var(--muted-bg2);
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.25; }
+    .empty-title { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .empty-desc { font-size: 14px; color: var(--muted); }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(2px);
+    }
+    .modal {
+      background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { padding: 24px 24px 16px; border-bottom: 1px solid var(--border); }
+    .modal-title { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .modal-desc { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .modal-body { padding: 20px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-start; }
+    .modal-close {
+      position: absolute; top: 16px; left: 16px;
+      background: var(--muted-bg); border: none; cursor: pointer;
+      width: 28px; height: 28px; border-radius: 50%; font-size: 16px;
+      display: flex; align-items: center; justify-content: center; color: var(--muted);
+    }
+    .modal-close:hover { background: var(--border); }
+
+    /* ========== TOAST ========== */
+    .toast-wrap { position: fixed; bottom: 20px; left: 20px; z-index: 500; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow-lg);
+      min-width: 280px; max-width: 360px;
+      animation: slideIn 0.25s ease;
+    }
+    .toast-title { font-weight: 600; font-size: 14px; }
+    .toast-desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
+    .toast-success { border-right: 3px solid var(--success); }
+    .toast-error { border-right: 3px solid var(--danger); }
+    @keyframes slideIn { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ========== MISC ========== */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .text-muted { color: var(--muted); }
+    .text-primary { color: var(--primary); }
+    .font-bold { font-weight: 700; }
+    .flex { display: flex; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    .mb-4 { margin-bottom: 16px; }
+    .mb-6 { margin-bottom: 24px; }
+    .mt-4 { margin-top: 16px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 24px; }
+    .back-btn:hover { color: var(--primary); }
+    .progress-bar { width: 100%; height: 6px; background: var(--muted-bg); border-radius: 999px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.3s; }
+
+    /* ========== HIGHLIGHT ========== */
+    .highlight-row td { background: #eff6ff !important; }
+    .dot-indicator { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; flex-shrink: 0; }
+
+    /* ========== UPLOAD ZONE ========== */
+    .upload-zone {
+      border: 2px dashed var(--border); border-radius: var(--radius-sm);
+      padding: 28px; text-align: center; cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .upload-zone:hover { border-color: var(--primary); background: rgba(27,58,107,0.02); }
+    .upload-icon { font-size: 32px; opacity: 0.3; margin-bottom: 8px; }
+    .upload-label { font-size: 14px; font-weight: 500; }
+    .upload-hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    /* ========== COVER PREVIEW ========== */
+    .cover-preview {
+      aspect-ratio: 3/2; border-radius: var(--radius-sm); overflow: hidden;
+      border: 1px solid var(--border); position: relative; background: var(--muted-bg);
+    }
+    .cover-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .cover-remove {
+      position: absolute; top: 6px; left: 6px;
+      background: var(--danger); color: #fff; border: none;
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+      font-size: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    select.select { appearance: auto; }
+
+    /* ========== REGISTER ========== */
+    .register-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) { .register-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     NAVBAR (hidden on login/register pages)
+     ================================================================ -->
+<nav class="navbar" id="navbar" style="display:none">
+  <div class="navbar-inner">
+    <a class="navbar-brand" onclick="showPage('library')">
+      <div class="navbar-logo">B</div>
+      کتێبخانەی بڕایت
+    </a>
+    <div class="navbar-links">
+      <span class="nav-link" id="navLibrary" onclick="showPage('library')">📚 کتێبخانە</span>
+      <span class="nav-link" id="navFeedback" onclick="showPage('feedback')">💬 فیدباک</span>
+      <span class="nav-link" id="navAdmin" onclick="showPage('admin')" style="display:none">⚙️ ئەدمین</span>
+    </div>
+    <div class="navbar-user">
+      <span class="user-badge" id="userBadge">قوتابی</span>
+      <button class="btn-logout" onclick="logout()">دەرچوون</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ================================================================
+     PAGE: LOGIN
+     ================================================================ -->
+<div class="page active" id="page-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="card">
+        <div class="card-body" style="padding: 32px">
+          <div class="login-logo-wrap">
+            <div class="login-logo">
+              <span class="login-logo-text">B</span>
+            </div>
+          </div>
+          <h1 class="login-title">چوونە ژوورەوە</h1>
+          <p class="login-subtitle">بۆ بەکارهێنانی کتێبخانەی بڕایت، تکایە بچۆرە ژوورەوە</p>
+          <div class="form-group">
+            <label>ناوی بەکارهێنەر</label>
+            <input class="input" id="loginUser" type="text" dir="ltr" placeholder="ناوی بەکارهێنەرەکەت..." />
+          </div>
+          <div class="form-group">
+            <label>تێپەڕەوشە</label>
+            <input class="input" id="loginPass" type="password" dir="ltr" placeholder="تێپەڕەوشەکەت..." />
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doLogin()" style="margin-top:8px">چوونە ژوورەوە</button>
+          <hr class="divider" style="margin-top:20px" />
+          <p class="login-footer">
+            هەژمارت نییە؟
+            <span class="link" onclick="showPage('register')">خۆت تۆمار بکە</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE: REGISTER
+     ================================================================ -->
+<div class="page" id="page-register">
+  <div class="login-wrap">
+    <div class="login-card" style="max-width:500px">
+      <div class="card">
+        <div class="card-body" style="padding: 32px">
+          <div class="login-logo-wrap">
+            <div class="login-logo"><span class="login-logo-text">B</span></div>
+          </div>
+          <h1 class="login-title">تۆمارکردن</h1>
+          <p class="login-subtitle">هەژماری نوێ بۆ کتێبخانەی بڕایت درووست بکە</p>
+          <div class="register-grid">
+            <div class="form-group">
+              <label>ناوی تەواو</label>
+              <input class="input" id="regName" type="text" placeholder="ناوت بنووسە..." />
+            </div>
+            <div class="form-group">
+              <label>ناوی بەکارهێنەر</label>
+              <input class="input" id="regUser" type="text" dir="ltr" placeholder="username" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>بەش</label>
+            <select class="input select" id="regDept">
+              <option value="">هەڵبژێرە...</option>
+              <option>بەشی پەرستاری</option>
+              <option>بەشی تەکنیکی چاو</option>
+              <option>بەشی ئایتی</option>
+              <option>بەشی دەرمانسازی</option>
+              <option>بەشی شیکاری نەخۆشیەکان</option>
+              <option>بەشی میکانیکی ئۆتۆمبیل</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>کۆدی بەجەکە</label>
+            <input class="input" id="regBadge" type="text" dir="ltr" placeholder="BADGE-001" />
+          </div>
+          <div class="register-grid">
+            <div class="form-group">
+              <label>تێپەڕەوشە</label>
+              <input class="input" id="regPass" type="password" dir="ltr" placeholder="..." />
+            </div>
+            <div class="form-group">
+              <label>دووبارە تێپەڕەوشە</label>
+              <input class="input" id="regPass2" type="password" dir="ltr" placeholder="..." />
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="doRegister()">تۆمارکردن</button>
+          <hr class="divider" style="margin-top:20px" />
+          <p class="login-footer">
+            هەژمارت هەیە؟
+            <span class="link" onclick="showPage('login')">چوونە ژوورەوە</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE: LIBRARY
+     ================================================================ -->
+<div class="page" id="page-library">
+  <div class="container">
+    <div class="lib-header">
+      <div>
+        <h1 class="lib-title">کتێبخانەی ئەلیکترۆنی</h1>
+        <p class="lib-subtitle">کتێبەکان و سەرچاوەکانی خوێندن دابەزێنە</p>
+      </div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="input" id="searchInput" placeholder="گەڕان بۆ کتێب..." oninput="filterBooks()" />
+      </div>
+    </div>
+
+    <div class="tabs-wrap">
+      <div class="tabs" id="deptTabs">
+        <button class="tab-btn active" onclick="filterDept('all', this)">هەموو بەشەکان</button>
+        <button class="tab-btn" onclick="filterDept('بەشی پەرستاری', this)">بەشی پەرستاری</button>
+        <button class="tab-btn" onclick="filterDept('بەشی تەکنیکی چاو', this)">بەشی تەکنیکی چاو</button>
+        <button class="tab-btn" onclick="filterDept('بەشی ئایتی', this)">بەشی ئایتی</button>
+        <button class="tab-btn" onclick="filterDept('بەشی دەرمانسازی', this)">بەشی دەرمانسازی</button>
+        <button class="tab-btn" onclick="filterDept('بەشی شیکاری نەخۆشیەکان', this)">بەشی شیکاری نەخۆشیەکان</button>
+        <button class="tab-btn" onclick="filterDept('بەشی میکانیکی ئۆتۆمبیل', this)">بەشی میکانیکی ئۆتۆمبیل</button>
+      </div>
+    </div>
+
+    <div class="books-grid" id="booksGrid"></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE: BOOK DETAIL
+     ================================================================ -->
+<div class="page" id="page-bookdetail">
+  <div class="container">
+    <span class="back-btn" onclick="showPage('library')">← گەڕانەوە بۆ کتێبخانە</span>
+    <div class="detail-grid">
+      <div>
+        <div class="detail-cover" id="detailCover">
+          <div class="detail-cover-inner">
+            <div class="detail-cover-stripe"></div>
+            <div class="detail-cover-icon">📖</div>
+            <div class="detail-cover-title" id="detailCoverTitle"></div>
+            <div class="detail-cover-author" id="detailCoverAuthor"></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="download-card">
+            <button class="btn btn-primary btn-lg" onclick="downloadBook()">⬇️ دابەزاندنی PDF</button>
+            <button class="btn btn-secondary" onclick="showPage('feedback')">💬 بۆچوونت بنووسە</button>
+            <div style="font-size:13px; color:var(--muted); text-align:center">
+              <span id="detailDownloads">٠</span> جار دابەزێنراوە
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="badge badge-secondary mb-4" id="detailDept"></div>
+        <h1 class="detail-title" id="detailTitle"></h1>
+        <p class="detail-author" id="detailAuthor"></p>
+        <div class="detail-meta">
+          <span class="detail-meta-item">📂 <span id="detailDeptMeta"></span></span>
+          <span class="detail-meta-item">📅 <span id="detailDate"></span></span>
+        </div>
+        <div class="detail-desc" id="detailDesc"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE: FEEDBACK
+     ================================================================ -->
+<div class="page" id="page-feedback">
+  <div class="container">
+    <div class="lib-header">
+      <div>
+        <h1 class="lib-title">بۆچوونەکان</h1>
+        <p class="lib-subtitle">بۆچوون و پێداچوونەوەکانت هەڵبژێرە</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 340px; gap:24px; align-items:start">
+      <div>
+        <div class="feedback-list" id="feedbackList"></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">بۆچوونی نوێ</div>
+            <div class="card-desc">کتێبێک هەڵبژێرە و بۆچوونەکەت بنووسە</div>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label>کتێب</label>
+              <select class="input select" id="feedbackBook">
+                <option value="">هەڵبژێرە...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>بۆچوونەکەت</label>
+              <textarea class="textarea" id="feedbackText" placeholder="بۆچوونەکەت لێرە بنووسە..."></textarea>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="submitFeedback()">ناردن</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE: ADMIN
+     ================================================================ -->
+<div class="page" id="page-admin">
+  <div class="container">
+    <div class="lib-header mb-6">
+      <div>
+        <h1 class="lib-title">پانێلی ئەدمین</h1>
+        <p class="lib-subtitle">بەڕێوەبردنی کتێبخانەی بڕایت</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddBook()">➕ زیادکردنی کتێب</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-blue">📚</div>
+        <div><div class="stat-value" id="statBooks">٣٠</div><div class="stat-label">کتێبی کۆ</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-green">👤</div>
+        <div><div class="stat-value" id="statUsers">١٢</div><div class="stat-label">قوتابی تۆمارکراو</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-yellow">⬇️</div>
+        <div><div class="stat-value" id="statDownloads">٤٨</div><div class="stat-label">دابەزاندنی کۆ</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon-purple">💬</div>
+        <div><div class="stat-value" id="statFeedback">٧</div><div class="stat-label">بۆچوونی کۆ</div></div>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="admin-tabs">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="adminTab('books', this)">📚 کتێبەکان</button>
+        <button class="tab-btn" onclick="adminTab('users', this)">👤 قوتابیان</button>
+        <button class="tab-btn" onclick="adminTab('downloads', this)">
+          ⬇️ دابەزاندنەکان
+          <span class="badge badge-danger" id="unreadBadge" style="display:none; margin-right:4px; font-size:11px; padding:1px 6px">٣</span>
+        </button>
+        <button class="tab-btn" onclick="adminTab('feedbackAdmin', this)">💬 بۆچوونەکان</button>
+      </div>
+
+      <!-- Books Tab -->
+      <div class="admin-tab-content active" id="tab-books">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th><th>ناوی کتێب</th><th>نووسەر</th><th>بەش</th><th>دابەزاندن</th><th>کردارەکان</th>
+                </tr>
+              </thead>
+              <tbody id="adminBooksTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Tab -->
+      <div class="admin-tab-content" id="tab-users">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>ناو</th><th>بەکارهێنەر</th><th>بەش</th><th>کۆد</th><th>کات</th></tr>
+              </thead>
+              <tbody id="adminUsersTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Downloads Tab -->
+      <div class="admin-tab-content" id="tab-downloads">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-bold text-primary" style="font-size:16px">
+            لۆگی دابەزاندنەکان
+            <span class="badge badge-danger" id="unreadBadge2" style="display:none; margin-right:8px">٣ نوێ</span>
+          </h3>
+          <button class="btn btn-secondary btn-sm" onclick="markAllRead()">✔ هەموو خوێندراو</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>قوتابی</th><th>کتێب</th><th>بەش</th><th>کات</th><th>بارودۆخ</th></tr>
+              </thead>
+              <tbody id="adminDownloadsTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback Admin Tab -->
+      <div class="admin-tab-content" id="tab-feedbackAdmin">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>#</th><th>قوتابی</th><th>کتێب</th><th>بۆچوون</th><th>کات</th></tr>
+              </thead>
+              <tbody id="adminFeedbackTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     MODAL: ADD BOOK
+     ================================================================ -->
+<div class="modal-overlay" id="addBookModal" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header" style="position:relative">
+      <button class="modal-close" onclick="closeAddBook()">✕</button>
+      <div class="modal-title">زیادکردنی کتێبی نوێ</div>
+      <div class="modal-desc">زانیارییەکانی کتێبە نوێیەکە لێرە داخڵ بکە</div>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>ناوی کتێب</label>
+        <input class="input" id="bookTitle" placeholder="ناوی کتێبەکە..." />
+      </div>
+      <div class="form-group">
+        <label>نووسەر</label>
+        <input class="input" id="bookAuthor" placeholder="ناوی نووسەر..." />
+      </div>
+      <div class="form-group">
+        <label>بەش</label>
+        <select class="input select" id="bookDept">
+          <option value="">هەڵبژێرە...</option>
+          <option>بەشی پەرستاری</option>
+          <option>بەشی تەکنیکی چاو</option>
+          <option>بەشی ئایتی</option>
+          <option>بەشی دەرمانسازی</option>
+          <option>بەشی شیکاری نەخۆشیەکان</option>
+          <option>بەشی میکانیکی ئۆتۆمبیل</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>فایلی PDF</label>
+        <div class="upload-zone" onclick="document.getElementById('pdfInput').click()">
+          <div class="upload-icon">📄</div>
+          <div class="upload-label">کلیک بکە بۆ هەڵبژاردنی PDF</div>
+          <div class="upload-hint">زۆرترین 50MB</div>
+        </div>
+        <div id="pdfSelected" style="display:none; margin-top:8px">
+          <div class="flex items-center gap-2" style="background:var(--success-bg); border:1px solid #bbf7d0; border-radius:6px; padding:8px 12px; font-size:13px; color:var(--success)">
+            ✅ <span id="pdfFileName">file.pdf</span>
+          </div>
+          <div class="progress-bar" style="margin-top:6px"><div class="progress-fill" id="pdfProgress" style="width:0%"></div></div>
+        </div>
+        <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="pdfSelected(this)" />
+      </div>
+      <div class="form-group">
+        <label>پوختە (ئارەزوومەندانە)</label>
+        <textarea class="textarea" id="bookDesc" placeholder="کورتەی کتێبەکە..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>وێنەی بەرگ (ئارەزوومەندانە)</label>
+        <div id="coverZone" class="upload-zone" onclick="document.getElementById('coverInput').click()">
+          <div class="upload-icon">🖼️</div>
+          <div class="upload-label">کلیک بکە بۆ هەڵبژاردنی وێنە</div>
+          <div class="upload-hint">JPG, PNG, WebP · زۆرترین 5MB</div>
+        </div>
+        <div id="coverPreviewWrap" style="display:none; position:relative; margin-top:8px">
+          <div class="cover-preview">
+            <img id="coverPreviewImg" src="" alt="بەرگ" />
+          </div>
+          <button class="cover-remove" onclick="removeCover()">✕</button>
+        </div>
+        <input type="file" id="coverInput" accept="image/*" style="display:none" onchange="coverSelected(this)" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="saveBook()">پاشەکەوتکردن</button>
+      <button class="btn btn-secondary" onclick="closeAddBook()">داخستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ================================================================
+     SCRIPT
+     ================================================================ -->
+<script>
+// ---- Sample Data ----
+const DEPTS = [
+  'بەشی پەرستاری','بەشی تەکنیکی چاو','بەشی ئایتی',
+  'بەشی دەرمانسازی','بەشی شیکاری نەخۆشیەکان','بەشی میکانیکی ئۆتۆمبیل'
+];
+
+const BOOKS = [
+  { id:1, title:'بنچینەکانی پزیشکی', author:'د. ئارام حسێن', dept:'بەشی پەرستاری', downloads:24, desc:'کتێبی سەرەتایی بۆ قوتابیانی پزیشکی و پەرستاری.' },
+  { id:2, title:'بیناسایی چاو', author:'د. سەروە کریم', dept:'بەشی تەکنیکی چاو', downloads:17, desc:'توێژینەوەیەک لەسەر تەکنیکی چاو و نەخۆشیەکانی.' },
+  { id:3, title:'شیکاری خوێن', author:'پ. لاڤ عومەر', dept:'بەشی شیکاری نەخۆشیەکان', downloads:33, desc:'رێنمایی تەکنیکی بۆ شیکاری خوێن.' },
+  { id:4, title:'فارماکۆلۆژی سەرەتایی', author:'د. هاوژین', dept:'بەشی دەرمانسازی', downloads:19, desc:'بنچینەکانی دەرمانسازی.' },
+  { id:5, title:'پرۆگرامکردنی Python', author:'م. ئاسۆ', dept:'بەشی ئایتی', downloads:41, desc:'فێربوونی Python لە سفرەوە.' },
+  { id:6, title:'ئینجینیاری موتەر', author:'م. بازان', dept:'بەشی میکانیکی ئۆتۆمبیل', downloads:12, desc:'سیستەمی موتەر و ئۆتۆمبیل.' },
+  { id:7, title:'داواکردنی دەرمان', author:'د. سارا', dept:'بەشی دەرمانسازی', downloads:28, desc:'رێگاکانی داواکردن و دابەشکردنی دەرمان.' },
+  { id:8, title:'تۆڕی کۆمپیوتەر', author:'م. ژیار', dept:'بەشی ئایتی', downloads:35, desc:'بنچینەکانی تۆڕی کۆمپیوتەر و شیفرەنووسی.' },
+  { id:9, title:'ئالوگۆری کاری ناڵاو', author:'پ. ئاوات', dept:'بەشی پەرستاری', downloads:9, desc:'ئالوگۆریە پەرستارییەکان.' },
+  { id:10, title:'دیزاینی وێب', author:'م. ئارام', dept:'بەشی ئایتی', downloads:53, desc:'HTML، CSS، JavaScript.' },
+];
+
+const USERS = [
+  { id:1, name:'شاهین عومەر', username:'shaheen', dept:'بەشی ئایتی', badge:'IT-001', date:'٢٠٢٥/٠١/١٠' },
+  { id:2, name:'لاڤین حسین', username:'lavin', dept:'بەشی پەرستاری', badge:'NR-002', date:'٢٠٢٥/٠١/١٥' },
+  { id:3, name:'ئاسۆ محمد', username:'aso', dept:'بەشی دەرمانسازی', badge:'PH-003', date:'٢٠٢٥/٠٢/٠٣' },
+];
+
+const DOWNLOADS_DATA = [
+  { id:1, user:'شاهین عومەر', book:'پرۆگرامکردنی Python', dept:'بەشی ئایتی', date:'٢٠٢٥/٠٤/١٠ — ١٠:٣٢', isRead:false },
+  { id:2, user:'لاڤین حسین', book:'بنچینەکانی پزیشکی', dept:'بەشی پەرستاری', date:'٢٠٢٥/٠٤/١١ — ١٤:٢٠', isRead:false },
+  { id:3, user:'ئاسۆ محمد', book:'فارماکۆلۆژی سەرەتایی', dept:'بەشی دەرمانسازی', date:'٢٠٢٥/٠٤/١٢ — ٠٩:٠٥', isRead:false },
+  { id:4, user:'شاهین عومەر', book:'تۆڕی کۆمپیوتەر', dept:'بەشی ئایتی', date:'٢٠٢٥/٠٤/١٢ — ١٦:٤٠', isRead:true },
+];
+
+const FEEDBACKS = [
+  { id:1, user:'شاهین عومەر', dept:'بەشی ئایتی', book:'پرۆگرامکردنی Python', content:'کتێبەکە زۆر باشە و سودمەندە بۆ فێربوونی Python.', date:'١٠ی نیسان' },
+  { id:2, user:'لاڤین حسین', dept:'بەشی پەرستاری', book:'بنچینەکانی پزیشکی', content:'مامۆستایانمان پیشنیاری ئەم کتێبەیان کرد، زۆر بە ئاسانی تێدەگەیشتم.', date:'١١ی نیسان' },
+  { id:3, user:'ئاسۆ محمد', dept:'بەشی دەرمانسازی', book:'فارماکۆلۆژی سەرەتایی', content:'زانیارییەکانی کتێبەکە نوێ و بەسوودن.', date:'١٢ی نیسان' },
+];
+
+// ---- State ----
+let currentUser = null;
+let selectedDept = 'all';
+let currentBook = null;
+let booksData = [...BOOKS];
+
+// ---- Navigation ----
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const isAuth = ['login','register'].includes(page);
+  document.getElementById('navbar').style.display = isAuth ? 'none' : '';
+  ['navLibrary','navFeedback'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (page === 'library') document.getElementById('navLibrary').classList.add('active');
+  if (page === 'feedback') document.getElementById('navFeedback').classList.add('active');
+  if (page === 'library') renderBooks();
+  if (page === 'admin') renderAdmin();
+  if (page === 'feedback') renderFeedback();
+}
+
+// ---- Auth ----
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if (!u || !p) { toast('هەڵە', 'تکایە هەموو خانەکان پڕ بکەوە', 'error'); return; }
+  if (u === 'admin' && p === 'admin1234') {
+    currentUser = { name:'Admin', role:'admin', dept:'بەشی ئایتی' };
+    document.getElementById('userBadge').textContent = 'ئەدمین';
+    document.getElementById('navAdmin').style.display = '';
+    toast('بە سەرکەوتوویی', 'بەخێربێیت، ئەدمین', 'success');
+    showPage('admin');
+  } else if (u && p) {
+    currentUser = { name: u, role:'student', dept:'بەشی ئایتی' };
+    document.getElementById('userBadge').textContent = u;
+    document.getElementById('navAdmin').style.display = 'none';
+    toast('بە سەرکەوتوویی', 'بەخێربێیت بۆ کتێبخانەی بڕایت', 'success');
+    showPage('library');
+  }
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  if (!name) { toast('هەڵە','ناوی تەواو بنووسە','error'); return; }
+  currentUser = { name, role:'student', dept: document.getElementById('regDept').value || 'بەشی ئایتی' };
+  document.getElementById('userBadge').textContent = name;
+  document.getElementById('navAdmin').style.display = 'none';
+  toast('بە سەرکەوتوویی','تۆمارکردنت تەواو بوو','success');
+  showPage('library');
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  showPage('login');
+}
+
+// ---- Library ----
+function filterDept(dept, btn) {
+  selectedDept = dept;
+  document.querySelectorAll('#deptTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBooks();
+}
+
+function filterBooks() { renderBooks(); }
+
+function renderBooks() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  const filtered = booksData.filter(b => {
+    const deptOk = selectedDept === 'all' || b.dept === selectedDept;
+    const searchOk = !q || b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q);
+    return deptOk && searchOk;
+  });
+  const grid = document.getElementById('booksGrid');
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
+      <div class="empty-icon">📚</div>
+      <div class="empty-title">هیچ کتێبێک نەدۆزرایەوە</div>
+      <div class="empty-desc">لە ئێستادا ئەم بەشە هیچ کتێبێکی تێدا نییە</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(b => `
+    <div class="book-card">
+      <div class="book-cover">
+        <div class="book-cover-inner">
+          <div class="book-cover-stripe"></div>
+          <div class="book-cover-icon">📖</div>
+          <div class="book-cover-title">${b.title}</div>
+        </div>
+        <span class="book-dept-badge">${b.dept}</span>
+      </div>
+      <div class="book-info">
+        <div class="book-name">${b.title}</div>
+        <div class="book-author">${b.author}</div>
+        <div class="book-downloads">⬇️ ${b.downloads} جار دابەزێنراوە</div>
+      </div>
+      <div class="book-actions">
+        <button class="btn btn-primary btn-full btn-sm" onclick="openBook(${b.id})">بینینی کتێب</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ---- Book Detail ----
+function openBook(id) {
+  currentBook = booksData.find(b => b.id === id);
+  if (!currentBook) return;
+  document.getElementById('detailTitle').textContent = currentBook.title;
+  document.getElementById('detailAuthor').textContent = currentBook.author;
+  document.getElementById('detailDept').textContent = currentBook.dept;
+  document.getElementById('detailDeptMeta').textContent = currentBook.dept;
+  document.getElementById('detailDate').textContent = '٢٠٢٥/٠١/١٠';
+  document.getElementById('detailDownloads').textContent = currentBook.downloads;
+  document.getElementById('detailCoverTitle').textContent = currentBook.title;
+  document.getElementById('detailCoverAuthor').textContent = currentBook.author;
+  document.getElementById('detailDesc').textContent = currentBook.desc || 'هیچ پوختەیەک نییە.';
+  showPage('bookdetail');
+}
+
+function downloadBook() {
+  if (!currentBook) return;
+  currentBook.downloads++;
+  toast('دابەزاندن', `"${currentBook.title}" دابەزاندن دەست پێکرد`, 'success');
+  document.getElementById('detailDownloads').textContent = currentBook.downloads;
+}
+
+// ---- Feedback ----
+function renderFeedback() {
+  const list = document.getElementById('feedbackList');
+  list.innerHTML = FEEDBACKS.map(f => `
+    <div class="feedback-item">
+      <div class="feedback-header">
+        <div class="feedback-user">
+          <div class="feedback-avatar">${f.user[0]}</div>
+          <div>
+            <div class="feedback-name">${f.user}</div>
+            <div class="feedback-dept">${f.dept}</div>
+          </div>
+        </div>
+        <div class="feedback-date">${f.date}</div>
+      </div>
+      <div class="feedback-book">📚 ${f.book}</div>
+      <div class="feedback-content">${f.content}</div>
+    </div>
+  `).join('');
+  const sel = document.getElementById('feedbackBook');
+  sel.innerHTML = '<option value="">هەڵبژێرە...</option>' +
+    booksData.map(b => `<option value="${b.id}">${b.title}</option>`).join('');
+}
+
+function submitFeedback() {
+  const bookId = document.getElementById('feedbackBook').value;
+  const text = document.getElementById('feedbackText').value.trim();
+  if (!bookId || !text) { toast('هەڵە','کتێب و بۆچوون دیاری بکە','error'); return; }
+  const book = booksData.find(b => b.id == bookId);
+  FEEDBACKS.unshift({ id: Date.now(), user: currentUser?.name || 'قوتابی', dept: currentUser?.dept || '', book: book?.title || '', content: text, date: 'ئێستا' });
+  document.getElementById('feedbackText').value = '';
+  document.getElementById('feedbackBook').value = '';
+  toast('سپاس','بۆچوونەکەت نێردرا','success');
+  renderFeedback();
+}
+
+// ---- Admin ----
+function adminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.admin-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  btn.classList.add('active');
+}
+
+function renderAdmin() {
+  // Books table
+  document.getElementById('adminBooksTable').innerHTML = booksData.map((b,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td><strong>${b.title}</strong></td>
+      <td>${b.author}</td>
+      <td><span class="badge badge-secondary">${b.dept}</span></td>
+      <td>${b.downloads}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteBook(${b.id})">🗑 سڕینەوە</button></td>
+    </tr>
+  `).join('');
+  // Users table
+  document.getElementById('adminUsersTable').innerHTML = USERS.map((u,i) => `
+    <tr>
+      <td>${i+1}</td><td><strong>${u.name}</strong></td>
+      <td dir="ltr" style="text-align:right">${u.username}</td>
+      <td>${u.dept}</td><td dir="ltr" style="text-align:right">${u.badge}</td>
+      <td>${u.date}</td>
+    </tr>
+  `).join('');
+  // Downloads table
+  const unread = DOWNLOADS_DATA.filter(d => !d.isRead).length;
+  document.getElementById('unreadBadge').textContent = unread;
+  document.getElementById('unreadBadge').style.display = unread ? '' : 'none';
+  document.getElementById('unreadBadge2').textContent = unread + ' نوێ';
+  document.getElementById('unreadBadge2').style.display = unread ? '' : 'none';
+  document.getElementById('adminDownloadsTable').innerHTML = DOWNLOADS_DATA.map((d,i) => `
+    <tr class="${!d.isRead ? 'highlight-row' : ''}">
+      <td>${i+1}</td>
+      <td>${d.user}</td>
+      <td>${d.book}</td>
+      <td>${d.dept}</td>
+      <td>${d.date}</td>
+      <td>${!d.isRead ? '<span class="badge badge-primary" style="font-size:11px">نوێ</span>' : '<span style="color:var(--muted);font-size:12px">خوێندراو</span>'}</td>
+    </tr>
+  `).join('');
+  // Feedback table
+  document.getElementById('adminFeedbackTable').innerHTML = FEEDBACKS.map((f,i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>${f.user}</td>
+      <td>${f.book}</td>
+      <td>${f.content.slice(0,60)}${f.content.length>60?'...':''}</td>
+      <td>${f.date}</td>
+    </tr>
+  `).join('');
+  // Stats
+  document.getElementById('statBooks').textContent = booksData.length;
+  document.getElementById('statUsers').textContent = USERS.length;
+  document.getElementById('statDownloads').textContent = DOWNLOADS_DATA.length;
+  document.getElementById('statFeedback').textContent = FEEDBACKS.length;
+}
+
+function deleteBook(id) {
+  if (!confirm('دڵنیایت کە دەتەوێت ئەم کتێبە بسڕیتەوە؟')) return;
+  booksData = booksData.filter(b => b.id !== id);
+  toast('سڕایەوە','کتێبەکە سڕایەوە','success');
+  renderAdmin();
+}
+
+function markAllRead() {
+  DOWNLOADS_DATA.forEach(d => d.isRead = true);
+  toast('تەواو بوو','هەموو خوێندراو کرا','success');
+  renderAdmin();
+}
+
+// ---- Add Book Modal ----
+function openAddBook() {
+  document.getElementById('addBookModal').style.display = 'flex';
+}
+function closeAddBook() {
+  document.getElementById('addBookModal').style.display = 'none';
+  ['bookTitle','bookAuthor','bookDesc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('bookDept').value = '';
+  document.getElementById('pdfSelected').style.display = 'none';
+  removeCover();
+}
+function closeModal(e) {
+  if (e.target === document.getElementById('addBookModal')) closeAddBook();
+}
+function pdfSelected(input) {
+  const f = input.files[0];
+  if (!f) return;
+  document.getElementById('pdfFileName').textContent = f.name;
+  document.getElementById('pdfSelected').style.display = 'block';
+  let p = 0;
+  const iv = setInterval(() => {
+    p = Math.min(p + 8, 100);
+    document.getElementById('pdfProgress').style.width = p + '%';
+    if (p >= 100) clearInterval(iv);
+  }, 80);
+}
+function coverSelected(input) {
+  const f = input.files[0];
+  if (!f) return;
+  const url = URL.createObjectURL(f);
+  document.getElementById('coverPreviewImg').src = url;
+  document.getElementById('coverPreviewWrap').style.display = 'block';
+  document.getElementById('coverZone').style.display = 'none';
+}
+function removeCover() {
+  document.getElementById('coverPreviewWrap').style.display = 'none';
+  document.getElementById('coverZone').style.display = 'block';
+  document.getElementById('coverInput').value = '';
+  document.getElementById('coverPreviewImg').src = '';
+}
+function saveBook() {
+  const title = document.getElementById('bookTitle').value.trim();
+  const author = document.getElementById('bookAuthor').value.trim();
+  const dept = document.getElementById('bookDept').value;
+  if (!title || !author || !dept) { toast('هەڵە','هەموو خانەکانی پێویست پڕ بکەوە','error'); return; }
+  const newBook = {
+    id: Date.now(), title, author, dept,
+    downloads: 0, desc: document.getElementById('bookDesc').value.trim()
+  };
+  booksData.unshift(newBook);
+  closeAddBook();
+  toast('بە سەرکەوتوویی',`"${title}" زیادکرا`,'success');
+  renderAdmin();
+}
+
+// ---- Toast ----
+function toast(title, desc, type = 'success') {
+  const wrap = document.getElementById('toastWrap');
+  const div = document.createElement('div');
+  div.className = 'toast toast-' + type;
+  div.innerHTML = `<div class="toast-title">${title}</div><div class="toast-desc">${desc}</div>`;
+  wrap.appendChild(div);
+  setTimeout(() => { div.style.opacity = '0'; div.style.transition = 'opacity 0.3s'; setTimeout(() => div.remove(), 300); }, 3000);
+}
+
+// ---- Init ----
+renderBooks();
+</script>
+</body>
+</html>

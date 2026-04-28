@@ -18,3 +18,9 @@ id = "i-CCTd7hYW22qTi3BUzlX"
 uri = "file://bright-library-all.zip"
 type = "unspecified"
 title = "کتێبخانەی بڕایت — هەموو کۆد سەرچاوەکان (VSCode)"
+
+[[outputs]]
+id = "kBLZrcPsXcyEAZcsW3Egc"
+uri = "file://bright-library-index.zip"
+type = "unspecified"
+title = "index.html — کتێبخانەی بڕایت (VSCode یا Browser)"
