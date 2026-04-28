@@ -84,7 +84,7 @@ async function seed() {
   ).limit(1);
   
   if (adminExists.length === 0) {
-    const hash = await bcrypt.hash("admin1234", 10);
+    const hash = await bcrypt.hash("bright-secret-2026", 10);
     await db.insert(usersTable).values({
       name: "ئەدمین",
       username: "admin",

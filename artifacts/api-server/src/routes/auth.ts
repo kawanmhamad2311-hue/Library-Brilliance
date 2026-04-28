@@ -55,14 +55,14 @@ router.post("/auth/login", async (req, res) => {
   }
   const { username, password } = parsed.data;
 
-  if (username === "admin" && password === "admin1234") {
+  if (username === "admin" && password === "bright-secret-2026") {
     const admins = await db.select().from(usersTable).where(eq(usersTable.username, "admin")).limit(1);
     let adminUser = admins[0];
     if (!adminUser) {
       const [newAdmin] = await db.insert(usersTable).values({
         name: "ئەدمین",
         username: "admin",
-        passwordHash: await bcrypt.hash("admin1234", 10),
+        passwordHash: await bcrypt.hash("bright-secret-2026", 10),
         department: "ئیدارە",
         badgeCode: "ADMIN001",
         role: "admin",
