@@ -24,3 +24,9 @@ id = "kBLZrcPsXcyEAZcsW3Egc"
 uri = "file://bright-library-index.zip"
 type = "unspecified"
 title = "index.html — کتێبخانەی بڕایت (VSCode یا Browser)"
+
+[[outputs]]
+id = "AzTGR9IrROXZ_wo6UiUxA"
+uri = "file://bright-library-vscode.zip"
+type = "unspecified"
+title = "کتێبخانەی بڕایت — VSCode (Source Code + README)"
