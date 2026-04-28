@@ -49,6 +49,30 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
+export async function requireAuthOrQueryToken(req: Request, res: Response, next: NextFunction) {
+  const queryToken = req.query.token as string | undefined;
+  if (queryToken) {
+    const payload = verifyToken(queryToken);
+    if (!payload) {
+      res.status(401).json({ error: "Invalid or expired token" });
+      return;
+    }
+    const users = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId)).limit(1);
+    if (users.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+    if (!users[0].isActive) {
+      res.status(403).json({ error: "Account is deactivated" });
+      return;
+    }
+    req.user = users[0];
+    next();
+    return;
+  }
+  await requireAuth(req, res, next);
+}
+
 export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
   await requireAuth(req, res, async () => {
     if (req.user.role !== "admin") {

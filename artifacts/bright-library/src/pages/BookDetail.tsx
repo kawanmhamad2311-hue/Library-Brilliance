@@ -9,14 +9,14 @@ import {
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { ArrowRight, BookOpen, Download, FileText, Loader2, MessageSquare, Send } from "lucide-react";
+import { ArrowRight, BookOpen, Download, ExternalLink, FileText, Loader2, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   getGetBookQueryKey, getListFeedbackQueryKey,
@@ -43,6 +43,14 @@ export default function BookDetail() {
 
   const downloadMutation = useDownloadBook();
   const feedbackMutation = useCreateFeedback();
+
+  const isObjectStoragePdf = book?.pdfUrl?.startsWith("/objects/");
+
+  const getPdfPreviewUrl = () => {
+    const token = localStorage.getItem("token");
+    const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
+    return `/api/books/${bookId}/pdf?inline=true${tokenParam}`;
+  };
 
   const handleDownload = () => {
     if (!book) return;
@@ -77,7 +85,6 @@ export default function BookDetail() {
           window.open(data.pdfUrl, "_blank");
         }
         
-        // Optimistically update download count
         queryClient.setQueryData<GetBookQueryResult>(
           getGetBookQueryKey(book.id),
           (old) => old ? { ...old, downloadCount: old.downloadCount + 1 } : old
@@ -107,7 +114,6 @@ export default function BookDetail() {
     }, {
       onSuccess: (newFeedback) => {
         setFeedbackContent("");
-        // Optimistically add to list
         queryClient.setQueryData<ListFeedbackQueryResult>(
           getListFeedbackQueryKey({ bookId: book.id }),
           (old) => old ? [newFeedback, ...old] : [newFeedback]
@@ -234,6 +240,43 @@ export default function BookDetail() {
                   {book.description || "هیچ زانیارییەک بۆ ئەم کتێبە نەنووسراوە."}
                 </p>
               </div>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <BookOpen className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-bold text-primary">خوێندنەوەی کتێب</h2>
+              </div>
+
+              {isObjectStoragePdf ? (
+                <div className="space-y-2">
+                  <div className="rounded-xl overflow-hidden border border-border/50 shadow-sm bg-muted/5">
+                    <iframe
+                      src={getPdfPreviewUrl()}
+                      title={book.title}
+                      className="w-full"
+                      style={{ height: "75vh", minHeight: "500px" }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    ئەگەر پڕەکە نەیهات، پشافووری تۆ ممکنە PDF نەیخوێنێتەوە. دوگمەی دابەزاندن بەکاربهێنە.
+                  </p>
+                </div>
+              ) : (
+                <Card className="border-border/50 shadow-sm">
+                  <CardContent className="p-6 flex flex-col items-center gap-4 text-center">
+                    <ExternalLink className="h-10 w-10 text-primary/40" />
+                    <p className="text-muted-foreground">ئەم کتێبە لە ماڵپەڕێکی دەرەکی پاراستراوە.</p>
+                    <Button asChild variant="outline" className="gap-2">
+                      <a href={book.pdfUrl} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                        <span>کتێبەکە لە تابێکی نوێ بخوێنەوە</span>
+                      </a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             <div className="pt-8 space-y-6">

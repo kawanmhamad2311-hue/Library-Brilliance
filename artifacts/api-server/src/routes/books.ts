@@ -3,7 +3,7 @@ import { Readable } from "stream";
 import { db, booksTable, downloadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { CreateBookBody, GetBookParams, DeleteBookParams, DownloadBookParams, UpdateBookBody, UpdateBookParams } from "@workspace/api-zod";
-import { requireAuth, requireAdmin } from "../lib/auth";
+import { requireAuth, requireAdmin, requireAuthOrQueryToken } from "../lib/auth";
 import { objectStorageService } from "./storage";
 import { ObjectNotFoundError } from "../lib/objectStorage";
 
@@ -175,7 +175,7 @@ router.post("/books/:id/download", requireAuth, async (req, res) => {
   });
 });
 
-router.get("/books/:id/pdf", requireAuth, async (req, res) => {
+router.get("/books/:id/pdf", requireAuthOrQueryToken, async (req, res) => {
   const parsed = GetBookParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid book ID" });
@@ -209,7 +209,8 @@ router.get("/books/:id/pdf", requireAuth, async (req, res) => {
 
     res.status(response.status);
     response.headers.forEach((value, key) => res.setHeader(key, value));
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(book.title)}.pdf"`);
+    const disposition = req.query.inline === "true" ? "inline" : "attachment";
+    res.setHeader("Content-Disposition", `${disposition}; filename="${encodeURIComponent(book.title)}.pdf"`);
     res.setHeader("Content-Type", "application/pdf");
 
     if (response.body) {
