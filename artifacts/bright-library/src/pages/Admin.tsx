@@ -4,12 +4,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Book } from "@workspace/api-client-react";
 import { 
   useGetAdminStats, 
   useListUsers, 
   useListDownloads,
   useCreateBook,
   useDeleteBook,
+  useUpdateBook,
   useListBooks,
   useListAdminFeedback,
   useGetUnreadNotificationsCount,
@@ -42,9 +44,9 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { 
-  Book, BookOpen, Download, Loader2, MessageSquare, Plus, 
+  Book as BookIcon, BookOpen, Download, Loader2, MessageSquare, Plus, 
   Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X, CheckCircle,
-  UserX, UserCheck, AlertTriangle
+  UserX, UserCheck, AlertTriangle, Pencil
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
@@ -84,9 +86,25 @@ export default function Admin() {
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
 
-  // PDF upload state
+  // PDF upload state (for add dialog)
   const pdfFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadState, setUploadState] = useState<UploadState>({
+    file: null,
+    objectPath: null,
+    isUploading: false,
+    progress: 0,
+    error: null,
+  });
+
+  // Edit dialog state
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [isEditBookOpen, setIsEditBookOpen] = useState(false);
+  const [editCoverImageUrl, setEditCoverImageUrl] = useState<string | null>(null);
+  const [editCoverPreview, setEditCoverPreview] = useState<string | null>(null);
+  const [isUploadingEditCover, setIsUploadingEditCover] = useState(false);
+  const editCoverFileInputRef = useRef<HTMLInputElement>(null);
+  const editPdfFileInputRef = useRef<HTMLInputElement>(null);
+  const [editUploadState, setEditUploadState] = useState<UploadState>({
     file: null,
     objectPath: null,
     isUploading: false,
@@ -133,6 +151,7 @@ export default function Admin() {
 
   const createBookMutation = useCreateBook();
   const deleteBookMutation = useDeleteBook();
+  const updateBookMutation = useUpdateBook();
   const deactivateUserMutation = useDeactivateUser();
   const reactivateUserMutation = useReactivateUser();
   const deleteUserMutation = useDeleteUser();
@@ -140,6 +159,17 @@ export default function Admin() {
   const [deleteUserDialog, setDeleteUserDialog] = useState<{ id: number; name: string } | null>(null);
 
   const form = useForm<z.infer<typeof bookSchema>>({
+    resolver: zodResolver(bookSchema),
+    defaultValues: {
+      title: "",
+      author: "",
+      description: "",
+      department: "",
+      pdfUrl: "",
+    },
+  });
+
+  const editForm = useForm<z.infer<typeof bookSchema>>({
     resolver: zodResolver(bookSchema),
     defaultValues: {
       title: "",
@@ -317,6 +347,129 @@ export default function Admin() {
         });
       },
     });
+  }
+
+  function handleOpenEditBook(book: Book) {
+    setEditingBook(book);
+    editForm.reset({
+      title: book.title,
+      author: book.author,
+      description: book.description ?? "",
+      department: book.department,
+      pdfUrl: book.pdfUrl,
+    });
+    setEditCoverImageUrl(book.coverImage ?? null);
+    setEditCoverPreview(book.coverImage ?? null);
+    setEditUploadState({ file: null, objectPath: null, isUploading: false, progress: 0, error: null });
+    setIsEditBookOpen(true);
+  }
+
+  function handleCloseEditBook() {
+    setIsEditBookOpen(false);
+    setEditingBook(null);
+    editForm.reset();
+    setEditCoverImageUrl(null);
+    setEditCoverPreview(null);
+    setEditUploadState({ file: null, objectPath: null, isUploading: false, progress: 0, error: null });
+    if (editPdfFileInputRef.current) editPdfFileInputRef.current.value = "";
+    if (editCoverFileInputRef.current) editCoverFileInputRef.current.value = "";
+  }
+
+  async function handleEditCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditCoverPreview(URL.createObjectURL(file));
+    setIsUploadingEditCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("cover", file);
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json() as { url: string };
+      setEditCoverImageUrl(data.url);
+    } catch {
+      toast({ variant: "destructive", title: "هەڵە روویدا", description: "نەتوانرا وێنەکە بارکرێت." });
+      setEditCoverPreview(editCoverImageUrl);
+    } finally {
+      setIsUploadingEditCover(false);
+    }
+  }
+
+  function resetEditCover() {
+    setEditCoverImageUrl(null);
+    setEditCoverPreview(null);
+    if (editCoverFileInputRef.current) editCoverFileInputRef.current.value = "";
+  }
+
+  async function handleEditFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setEditUploadState(prev => ({ ...prev, error: "تەنها فایلی PDF پەسەند دەکرێت" }));
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setEditUploadState(prev => ({ ...prev, error: "قەبارەی فایل نابێت لە 50MB زیاتر بێت" }));
+      return;
+    }
+
+    setEditUploadState({ file, objectPath: null, isUploading: true, progress: 10, error: null });
+
+    try {
+      const urlRes = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: "application/pdf" }),
+      });
+      if (!urlRes.ok) throw new Error("نەتوانرا بەستەری بارکردن بەدەستبهێنرێت");
+      const { uploadURL, objectPath } = await urlRes.json();
+      setEditUploadState(prev => ({ ...prev, progress: 40 }));
+      const uploadRes = await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": "application/pdf" },
+      });
+      if (!uploadRes.ok) throw new Error("بارکردنی فایل سەرکەوتوو نەبوو");
+      setEditUploadState({ file, objectPath, isUploading: false, progress: 100, error: null });
+      editForm.setValue("pdfUrl", objectPath, { shouldValidate: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "بارکردنی فایل سەرکەوتوو نەبوو";
+      setEditUploadState(prev => ({ ...prev, isUploading: false, progress: 0, error: message }));
+    }
+  }
+
+  function handleRemoveEditFile() {
+    if (editingBook) {
+      editForm.setValue("pdfUrl", editingBook.pdfUrl, { shouldValidate: true });
+    }
+    setEditUploadState({ file: null, objectPath: null, isUploading: false, progress: 0, error: null });
+    if (editPdfFileInputRef.current) editPdfFileInputRef.current.value = "";
+  }
+
+  function onSubmitEditBook(values: z.infer<typeof bookSchema>) {
+    if (!editingBook) return;
+    updateBookMutation.mutate(
+      { id: editingBook.id, data: { ...values, coverImage: editCoverImageUrl } },
+      {
+        onSuccess: () => {
+          handleCloseEditBook();
+          queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
+          toast({ title: "کتێب نوێکرایەوە", description: "زانیارییەکانی کتێبەکە بە سەرکەوتوویی نوێکرایەوە." });
+        },
+        onError: () => {
+          toast({ variant: "destructive", title: "هەڵە روویدا", description: "نەتوانرا کتێبەکە نوێبکرێتەوە." });
+        },
+      }
+    );
   }
 
   function handleDeleteBook(id: number) {
@@ -612,15 +765,26 @@ export default function Admin() {
                             <TableCell><Badge variant="outline" className="font-normal">{book.department.replace('بەشی ', '')}</Badge></TableCell>
                             <TableCell className="text-center"><Badge variant="secondary">{book.downloadCount}</Badge></TableCell>
                             <TableCell className="text-left">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleDeleteBook(book.id)}
-                                disabled={deleteBookMutation.isPending}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <div className="flex items-center gap-1 justify-end">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title="دەستکاری"
+                                  className="text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                  onClick={() => handleOpenEditBook(book)}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={() => handleDeleteBook(book.id)}
+                                  disabled={deleteBookMutation.isPending}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))
@@ -871,6 +1035,154 @@ export default function Admin() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Edit Book Dialog */}
+      <Dialog open={isEditBookOpen} onOpenChange={(open) => { if (!open) handleCloseEditBook(); }}>
+        <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>دەستکاریکردنی کتێب</DialogTitle>
+            <DialogDescription>زانیارییەکانی کتێبەکە بگۆڕە.</DialogDescription>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onSubmitEditBook)} className="space-y-4 pt-4">
+              <FormField control={editForm.control} name="title" render={({ field }) => (
+                <FormItem><FormLabel>ناوی کتێب</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField control={editForm.control} name="author" render={({ field }) => (
+                <FormItem><FormLabel>نووسەر</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              )}/>
+              <FormField control={editForm.control} name="department" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>بەش</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} dir="rtl">
+                    <FormControl><SelectTrigger><SelectValue placeholder="هەڵبژێرە..." /></SelectTrigger></FormControl>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (<SelectItem key={dept} value={dept}>{dept}</SelectItem>))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}/>
+
+              {/* PDF Upload Field */}
+              <FormField control={editForm.control} name="pdfUrl" render={() => (
+                <FormItem>
+                  <FormLabel>فایلی PDF</FormLabel>
+                  <FormControl>
+                    <div>
+                      <input
+                        ref={editPdfFileInputRef}
+                        type="file"
+                        accept="application/pdf"
+                        className="hidden"
+                        onChange={handleEditFileSelect}
+                        disabled={editUploadState.isUploading}
+                      />
+                      {!editUploadState.file ? (
+                        <button
+                          type="button"
+                          onClick={() => editPdfFileInputRef.current?.click()}
+                          className="w-full border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                        >
+                          <Upload className="h-6 w-6" />
+                          <span className="text-sm font-medium">کلیک بکە بۆ گۆڕینی فایل</span>
+                          {editingBook && (
+                            <span className="text-xs text-green-600 flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" /> فایلی ئێستا هەیە
+                            </span>
+                          )}
+                        </button>
+                      ) : (
+                        <div className="border rounded-lg p-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-primary shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate" dir="ltr">{editUploadState.file.name}</p>
+                            </div>
+                            {!editUploadState.isUploading && (
+                              <button type="button" onClick={handleRemoveEditFile} className="text-muted-foreground hover:text-destructive transition-colors">
+                                <X className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          {editUploadState.isUploading && (
+                            <div className="space-y-1">
+                              <Progress value={editUploadState.progress} className="h-1.5" />
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Loader2 className="h-3 w-3 animate-spin" /> بارکردن...
+                              </p>
+                            </div>
+                          )}
+                          {editUploadState.objectPath && !editUploadState.isUploading && (
+                            <p className="text-xs text-green-600 flex items-center gap-1">
+                              <CheckCircle className="h-3 w-3" /> فایلی نوێ ئامادەیە
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {editUploadState.error && (
+                        <p className="text-xs text-destructive mt-1">{editUploadState.error}</p>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}/>
+
+              <FormField control={editForm.control} name="description" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>پوختە (ئارەزوومەندانە)</FormLabel>
+                  <FormControl><Textarea {...field} className="resize-none" /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}/>
+
+              {/* Cover Image Upload Field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">وێنەی بەرگ (ئارەزوومەندانە)</label>
+                {editCoverPreview ? (
+                  <div className="relative w-full rounded-lg overflow-hidden border border-border bg-muted/20 aspect-[3/2]">
+                    <img src={editCoverPreview} alt="پێشبینی" className="w-full h-full object-cover" />
+                    {isUploadingEditCover && (
+                      <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    )}
+                    {!isUploadingEditCover && (
+                      <button type="button" onClick={resetEditCover}
+                        className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow">
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => editCoverFileInputRef.current?.click()}
+                    className="w-full border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                    <ImageIcon className="h-8 w-8 opacity-40" />
+                    <span className="text-sm">کلیک بکە بۆ هەڵبژاردنی وێنە</span>
+                  </button>
+                )}
+                <input
+                  ref={editCoverFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleEditCoverFileChange}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full mt-2"
+                disabled={updateBookMutation.isPending || editUploadState.isUploading || isUploadingEditCover}
+              >
+                {updateBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                پاشەکەوتکردن
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

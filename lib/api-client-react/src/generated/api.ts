@@ -34,6 +34,7 @@ import type {
   RegisterBody,
   SuccessResponse,
   UnreadCountResponse,
+  UpdateBookBody,
   UploadCoverBody,
   UploadCoverResponse,
   UploadUrlRequest,
@@ -699,6 +700,93 @@ export function useGetBook<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update a book's details and optionally replace its PDF (admin only)
+ */
+export const getUpdateBookUrl = (id: number) => {
+  return `/api/books/${id}`;
+};
+
+export const updateBook = async (
+  id: number,
+  updateBookBody: UpdateBookBody,
+  options?: RequestInit,
+): Promise<Book> => {
+  return customFetch<Book>(getUpdateBookUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateBookBody),
+  });
+};
+
+export const getUpdateBookMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBook>>,
+    TError,
+    { id: number; data: BodyType<UpdateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateBook>>,
+  TError,
+  { id: number; data: BodyType<UpdateBookBody> },
+  TContext
+> => {
+  const mutationKey = ["updateBook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateBook>>,
+    { id: number; data: BodyType<UpdateBookBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateBook(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateBookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateBook>>
+>;
+export type UpdateBookMutationBody = BodyType<UpdateBookBody>;
+export type UpdateBookMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update a book's details and optionally replace its PDF (admin only)
+ */
+export const useUpdateBook = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateBook>>,
+    TError,
+    { id: number; data: BodyType<UpdateBookBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateBook>>,
+  TError,
+  { id: number; data: BodyType<UpdateBookBody> },
+  TContext
+> => {
+  return useMutation(getUpdateBookMutationOptions(options));
+};
 
 /**
  * @summary Delete a book (admin only)

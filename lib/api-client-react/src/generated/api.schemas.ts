@@ -78,6 +78,15 @@ export interface CreateBookBody {
   coverImage?: string | null;
 }
 
+export interface UpdateBookBody {
+  title?: string;
+  author?: string;
+  description?: string;
+  department?: string;
+  pdfUrl?: string;
+  coverImage?: string | null;
+}
+
 export interface UploadCoverResponse {
   url: string;
 }

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Readable } from "stream";
 import { db, booksTable, downloadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
-import { CreateBookBody, GetBookParams, DeleteBookParams, DownloadBookParams } from "@workspace/api-zod";
+import { CreateBookBody, GetBookParams, DeleteBookParams, DownloadBookParams, UpdateBookBody, UpdateBookParams } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { objectStorageService } from "./storage";
 import { ObjectNotFoundError } from "../lib/objectStorage";
@@ -63,6 +63,57 @@ router.get("/books/:id", requireAuth, async (req, res) => {
   }
 
   res.json(mapBook(book));
+});
+
+router.patch("/books/:id", requireAdmin, async (req, res) => {
+  const parsedParams = UpdateBookParams.safeParse({ id: Number(req.params.id) });
+  if (!parsedParams.success) {
+    res.status(400).json({ error: "Invalid book ID" });
+    return;
+  }
+  const parsedBody = UpdateBookBody.safeParse(req.body);
+  if (!parsedBody.success) {
+    res.status(400).json({ error: "Invalid request body" });
+    return;
+  }
+
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.id, parsedParams.data.id))
+    .limit(1);
+
+  if (books.length === 0) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  const book = books[0];
+
+  const updates = parsedBody.data;
+
+  const [updated] = await db
+    .update(booksTable)
+    .set({
+      ...(updates.title !== undefined && { title: updates.title }),
+      ...(updates.author !== undefined && { author: updates.author }),
+      ...(updates.description !== undefined && { description: updates.description }),
+      ...(updates.department !== undefined && { department: updates.department }),
+      ...(updates.pdfUrl !== undefined && { pdfUrl: updates.pdfUrl }),
+      ...("coverImage" in updates && { coverImage: updates.coverImage ?? null }),
+    })
+    .where(eq(booksTable.id, parsedParams.data.id))
+    .returning();
+
+  if (updates.pdfUrl && updates.pdfUrl !== book.pdfUrl && book.pdfUrl.startsWith("/objects/")) {
+    try {
+      const oldFile = await objectStorageService.getObjectEntityFile(book.pdfUrl);
+      await oldFile.delete();
+    } catch (err) {
+      console.warn("Failed to delete old PDF from object storage:", err);
+    }
+  }
+
+  res.json(mapBook(updated));
 });
 
 router.delete("/books/:id", requireAdmin, async (req, res) => {

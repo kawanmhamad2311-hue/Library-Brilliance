@@ -121,6 +121,34 @@ export const GetBookResponse = zod.object({
 });
 
 /**
+ * @summary Update a book's details and optionally replace its PDF (admin only)
+ */
+export const UpdateBookParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateBookBody = zod.object({
+  title: zod.string().optional(),
+  author: zod.string().optional(),
+  description: zod.string().optional(),
+  department: zod.string().optional(),
+  pdfUrl: zod.string().optional(),
+  coverImage: zod.string().nullish(),
+});
+
+export const UpdateBookResponse = zod.object({
+  id: zod.number(),
+  title: zod.string(),
+  author: zod.string(),
+  description: zod.string(),
+  department: zod.string(),
+  pdfUrl: zod.string(),
+  coverImage: zod.string().nullish(),
+  createdAt: zod.coerce.date(),
+  downloadCount: zod.number(),
+});
+
+/**
  * @summary Delete a book (admin only)
  */
 export const DeleteBookParams = zod.object({
