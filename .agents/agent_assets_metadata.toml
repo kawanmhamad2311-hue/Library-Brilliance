@@ -12,3 +12,9 @@ id = "BrCxIjczCJPTqi1KKGAJj"
 uri = "file://bright-library-source.zip"
 type = "unspecified"
 title = "کتێبخانەی بڕایت — Source Code (VSCode)"
+
+[[outputs]]
+id = "i-CCTd7hYW22qTi3BUzlX"
+uri = "file://bright-library-all.zip"
+type = "unspecified"
+title = "کتێبخانەی بڕایت — هەموو کۆد سەرچاوەکان (VSCode)"
