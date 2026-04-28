@@ -18,7 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ArrowRight, BookOpen, Download, FileText, Loader2, MessageSquare, Send } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { getGetBookQueryKey, getListFeedbackQueryKey } from "@workspace/api-client-react";
+import { 
+  getGetBookQueryKey, getListFeedbackQueryKey,
+  GetBookQueryResult, ListFeedbackQueryResult
+} from "@workspace/api-client-react";
 
 export default function BookDetail() {
   const [, params] = useRoute("/books/:id");
@@ -50,8 +53,9 @@ export default function BookDetail() {
         window.open(data.pdfUrl, '_blank');
         
         // Optimistically update download count
-        queryClient.setQueryData(getGetBookQueryKey(book.id), (old: any) => 
-          old ? { ...old, downloadCount: old.downloadCount + 1 } : old
+        queryClient.setQueryData<GetBookQueryResult>(
+          getGetBookQueryKey(book.id),
+          (old) => old ? { ...old, downloadCount: old.downloadCount + 1 } : old
         );
         
         toast({
@@ -79,8 +83,9 @@ export default function BookDetail() {
       onSuccess: (newFeedback) => {
         setFeedbackContent("");
         // Optimistically add to list
-        queryClient.setQueryData(getListFeedbackQueryKey({ bookId: book.id }), (old: any) => 
-          old ? [newFeedback, ...old] : [newFeedback]
+        queryClient.setQueryData<ListFeedbackQueryResult>(
+          getListFeedbackQueryKey({ bookId: book.id }),
+          (old) => old ? [newFeedback, ...old] : [newFeedback]
         );
         toast({
           title: "سەرنجەکەت نێردرا",
