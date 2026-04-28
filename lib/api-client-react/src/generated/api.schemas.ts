@@ -116,6 +116,18 @@ export interface AdminStats {
   recentDownloads: DownloadEvent[];
 }
 
+export interface AdminFeedbackItem {
+  id: number;
+  bookId: number;
+  bookTitle: string;
+  bookDepartment: string;
+  userId: number;
+  userName: string;
+  userDepartment: string;
+  content: string;
+  createdAt: string;
+}
+
 export type ListBooksParams = {
   department?: string;
 };

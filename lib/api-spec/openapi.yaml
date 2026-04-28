@@ -389,6 +389,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /admin/feedback:
+    get:
+      operationId: listAdminFeedback
+      tags: [admin]
+      summary: List all feedback across all books (admin only)
+      responses:
+        "200":
+          description: List of all feedback with user and book metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminFeedbackItem"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -651,3 +678,36 @@ components:
       required:
         - department
         - count
+
+    AdminFeedbackItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        bookTitle:
+          type: string
+        bookDepartment:
+          type: string
+        userId:
+          type: integer
+        userName:
+          type: string
+        userDepartment:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - bookId
+        - bookTitle
+        - bookDepartment
+        - userId
+        - userName
+        - userDepartment
+        - content
+        - createdAt

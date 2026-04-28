@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminFeedbackItem,
   AdminStats,
   AuthResponse,
   Book,
@@ -1248,6 +1249,81 @@ export function useListUsers<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getListUsersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all feedback across all books (admin only)
+ */
+export const getListAdminFeedbackUrl = () => {
+  return `/api/admin/feedback`;
+};
+
+export const listAdminFeedback = async (
+  options?: RequestInit,
+): Promise<AdminFeedbackItem[]> => {
+  return customFetch<AdminFeedbackItem[]>(getListAdminFeedbackUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListAdminFeedbackQueryKey = () => {
+  return [`/api/admin/feedback`] as const;
+};
+
+export const getListAdminFeedbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof listAdminFeedback>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminFeedback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListAdminFeedbackQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listAdminFeedback>>
+  > = ({ signal }) => listAdminFeedback({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminFeedback>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListAdminFeedbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listAdminFeedback>>
+>;
+export type ListAdminFeedbackQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary List all feedback across all books (admin only)
+ */
+
+export function useListAdminFeedback<
+  TData = Awaited<ReturnType<typeof listAdminFeedback>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listAdminFeedback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListAdminFeedbackQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

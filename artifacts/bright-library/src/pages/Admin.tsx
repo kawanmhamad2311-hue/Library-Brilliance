@@ -10,7 +10,8 @@ import {
   useListDownloads,
   useCreateBook,
   useDeleteBook,
-  useListBooks
+  useListBooks,
+  useListAdminFeedback
 } from "@workspace/api-client-react";
 import { Layout } from "@/components/layout/Layout";
 import { DEPARTMENTS } from "@/pages/Register";
@@ -41,7 +42,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { 
   getGetAdminStatsQueryKey, getListBooksQueryKey,
-  getListDownloadsQueryKey, getListUsersQueryKey
+  getListDownloadsQueryKey, getListUsersQueryKey,
+  getListAdminFeedbackQueryKey
 } from "@workspace/api-client-react";
 
 const bookSchema = z.object({
@@ -77,6 +79,10 @@ export default function Admin() {
 
   const { data: books, isLoading: isBooksLoading } = useListBooks(undefined, {
     query: { queryKey: getListBooksQueryKey(), enabled: !!user && user.role === "admin" }
+  });
+
+  const { data: allFeedback, isLoading: isFeedbackLoading } = useListAdminFeedback({
+    query: { queryKey: getListAdminFeedbackQueryKey(), enabled: !!user && user.role === "admin" }
   });
 
   const createBookMutation = useCreateBook();
@@ -188,10 +194,11 @@ export default function Admin() {
         </div>
 
         <Tabs defaultValue="books" dir="rtl" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-12 bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-4 h-12 bg-muted/50 p-1 rounded-xl">
             <TabsTrigger value="books" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">کتێبەکان</TabsTrigger>
             <TabsTrigger value="downloads" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">دابەزاندنەکان</TabsTrigger>
             <TabsTrigger value="users" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">قوتابیان</TabsTrigger>
+            <TabsTrigger value="feedback" className="rounded-lg text-sm sm:text-base data-[state=active]:bg-white data-[state=active]:shadow-sm">سەرنجەکان</TabsTrigger>
           </TabsList>
 
           <TabsContent value="books" className="mt-6">
@@ -386,6 +393,53 @@ export default function Admin() {
                             </TableCell>
                             <TableCell className="text-left text-muted-foreground text-sm" dir="ltr">
                               {format(new Date(u.createdAt), "yyyy/MM/dd")}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="feedback" className="mt-6">
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">هەموو سەرنجەکان</CardTitle>
+                <CardDescription>سەرنجی قوتابیان لەسەر کتێبەکان</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/50">
+                      <TableRow>
+                        <TableHead className="text-right">کتێب</TableHead>
+                        <TableHead className="text-right">قوتابی</TableHead>
+                        <TableHead className="text-right hidden md:table-cell">بەش</TableHead>
+                        <TableHead className="text-right">سەرنج</TableHead>
+                        <TableHead className="text-left">بەروار</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isFeedbackLoading ? (
+                        <TableRow><TableCell colSpan={5} className="h-24 text-center"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary/50" /></TableCell></TableRow>
+                      ) : allFeedback?.length === 0 ? (
+                        <TableRow><TableCell colSpan={5} className="h-24 text-center text-muted-foreground">هیچ سەرنجێک تۆمار نەکراوە</TableCell></TableRow>
+                      ) : (
+                        allFeedback?.map((fb) => (
+                          <TableRow key={fb.id}>
+                            <TableCell className="font-medium max-w-[150px] truncate">{fb.bookTitle}</TableCell>
+                            <TableCell>{fb.userName}</TableCell>
+                            <TableCell className="hidden md:table-cell">
+                              <Badge variant="outline" className="font-normal">{fb.userDepartment.replace('بەشی ', '')}</Badge>
+                            </TableCell>
+                            <TableCell className="max-w-[250px]">
+                              <p className="truncate text-sm text-muted-foreground">{fb.content}</p>
+                            </TableCell>
+                            <TableCell className="text-left text-muted-foreground text-sm" dir="ltr">
+                              {format(new Date(fb.createdAt), "yyyy/MM/dd HH:mm")}
                             </TableCell>
                           </TableRow>
                         ))

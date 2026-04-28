@@ -77,4 +77,25 @@ router.get("/admin/users", requireAdmin, async (_req, res) => {
   res.json(users);
 });
 
+router.get("/admin/feedback", requireAdmin, async (_req, res) => {
+  const feedbackRows = await db
+    .select({
+      id: feedbackTable.id,
+      bookId: feedbackTable.bookId,
+      bookTitle: booksTable.title,
+      bookDepartment: booksTable.department,
+      userId: feedbackTable.userId,
+      userName: usersTable.name,
+      userDepartment: usersTable.department,
+      content: feedbackTable.content,
+      createdAt: feedbackTable.createdAt,
+    })
+    .from(feedbackTable)
+    .innerJoin(usersTable, eq(feedbackTable.userId, usersTable.id))
+    .innerJoin(booksTable, eq(feedbackTable.bookId, booksTable.id))
+    .orderBy(desc(feedbackTable.createdAt));
+
+  res.json(feedbackRows);
+});
+
 export default router;

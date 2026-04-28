@@ -229,3 +229,21 @@ export const ListUsersResponseItem = zod.object({
   createdAt: zod.coerce.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
+
+/**
+ * @summary List all feedback across all books (admin only)
+ */
+export const ListAdminFeedbackResponseItem = zod.object({
+  id: zod.number(),
+  bookId: zod.number(),
+  bookTitle: zod.string(),
+  bookDepartment: zod.string(),
+  userId: zod.number(),
+  userName: zod.string(),
+  userDepartment: zod.string(),
+  content: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListAdminFeedbackResponse = zod.array(
+  ListAdminFeedbackResponseItem,
+);
