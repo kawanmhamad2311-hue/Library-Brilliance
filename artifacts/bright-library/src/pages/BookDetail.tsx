@@ -48,9 +48,34 @@ export default function BookDetail() {
     if (!book) return;
     
     downloadMutation.mutate({ id: book.id }, {
-      onSuccess: (data) => {
-        // Open PDF in new tab
-        window.open(data.pdfUrl, '_blank');
+      onSuccess: async (data) => {
+        const isStorageObject = data.pdfUrl.startsWith("/objects/");
+
+        if (isStorageObject) {
+          const token = localStorage.getItem("token");
+          const response = await fetch(`/api/books/${book.id}/pdf`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          });
+          if (!response.ok) {
+            toast({
+              variant: "destructive",
+              title: "هەڵە روویدا",
+              description: "نەتوانرا کتێبەکە دابەزێنرێت، تکایە دووبارە هەوڵبدەرەوە",
+            });
+            return;
+          }
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = blobUrl;
+          a.download = `${book.title}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        } else {
+          window.open(data.pdfUrl, "_blank");
+        }
         
         // Optimistically update download count
         queryClient.setQueryData<GetBookQueryResult>(

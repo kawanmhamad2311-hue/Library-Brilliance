@@ -5,6 +5,7 @@ import booksRouter from "./books";
 import feedbackRouter from "./feedback";
 import adminRouter from "./admin";
 import uploadRouter from "./upload";
+import storageRouter from "./storage";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(booksRouter);
 router.use(feedbackRouter);
 router.use(adminRouter);
 router.use(uploadRouter);
+router.use(storageRouter);
 
 export default router;

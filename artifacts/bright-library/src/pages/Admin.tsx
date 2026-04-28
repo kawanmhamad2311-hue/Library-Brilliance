@@ -33,11 +33,12 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { 
   Book, BookOpen, Download, Loader2, MessageSquare, Plus, 
-  Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X
+  Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X, CheckCircle
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
@@ -46,23 +47,45 @@ import {
   getListAdminFeedbackQueryKey
 } from "@workspace/api-client-react";
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
 const bookSchema = z.object({
   title: z.string().min(1, { message: "تکایە ناوی کتێب بنووسە" }),
   author: z.string().min(1, { message: "تکایە ناوی نووسەر بنووسە" }),
   description: z.string().optional().default(""),
   department: z.string().min(1, { message: "تکایە بەشێک هەڵبژێرە" }),
-  pdfUrl: z.string().url({ message: "تکایە بەستەرێکی دروست بنووسە (بە http دەست پێبکات)" }),
+  pdfUrl: z.string().min(1, { message: "تکایە فایلی PDF بارکە" }),
 });
+
+interface UploadState {
+  file: File | null;
+  objectPath: string | null;
+  isUploading: boolean;
+  progress: number;
+  error: string | null;
+}
 
 export default function Admin() {
   const { user, token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
+
+  // Cover image state
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+
+  // PDF upload state
+  const pdfFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadState, setUploadState] = useState<UploadState>({
+    file: null,
+    objectPath: null,
+    isUploading: false,
+    progress: 0,
+    error: null,
+  });
 
   // Redirect non-admins
   if (user && user.role !== "admin") {
@@ -130,7 +153,68 @@ export default function Admin() {
   function resetCover() {
     setCoverImageUrl(null);
     setCoverPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (coverFileInputRef.current) coverFileInputRef.current.value = "";
+  }
+
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      setUploadState(prev => ({ ...prev, error: "تەنها فایلی PDF پەسەند دەکرێت" }));
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setUploadState(prev => ({ ...prev, error: "قەبارەی فایل نابێت لە 50MB زیاتر بێت" }));
+      return;
+    }
+
+    setUploadState({ file, objectPath: null, isUploading: true, progress: 10, error: null });
+
+    try {
+      const urlRes = await fetch("/api/storage/uploads/request-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name: file.name,
+          size: file.size,
+          contentType: "application/pdf",
+        }),
+      });
+
+      if (!urlRes.ok) {
+        throw new Error("نەتوانرا بەستەری بارکردن بەدەستبهێنرێت");
+      }
+
+      const { uploadURL, objectPath } = await urlRes.json();
+
+      setUploadState(prev => ({ ...prev, progress: 40 }));
+
+      const uploadRes = await fetch(uploadURL, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": "application/pdf" },
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("بارکردنی فایل سەرکەوتوو نەبوو");
+      }
+
+      setUploadState({ file, objectPath, isUploading: false, progress: 100, error: null });
+      form.setValue("pdfUrl", objectPath, { shouldValidate: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "بارکردنی فایل سەرکەوتوو نەبوو";
+      setUploadState(prev => ({ ...prev, isUploading: false, progress: 0, error: message }));
+    }
+  }
+
+  function handleRemoveFile() {
+    setUploadState({ file: null, objectPath: null, isUploading: false, progress: 0, error: null });
+    form.setValue("pdfUrl", "", { shouldValidate: false });
+    if (pdfFileInputRef.current) pdfFileInputRef.current.value = "";
   }
 
   function onSubmitBook(values: z.infer<typeof bookSchema>) {
@@ -139,6 +223,7 @@ export default function Admin() {
         setIsAddBookOpen(false);
         form.reset();
         resetCover();
+        handleRemoveFile();
         queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
         toast({
@@ -172,8 +257,13 @@ export default function Admin() {
   }
 
   if (!user || user.role !== "admin") {
-    return null; // Will redirect
+    return null;
   }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   return (
     <Layout>
@@ -244,7 +334,14 @@ export default function Admin() {
                   <CardDescription>زیادکردن و سڕینەوەی کتێبەکان لە کتێبخانە</CardDescription>
                 </div>
                 
-                <Dialog open={isAddBookOpen} onOpenChange={setIsAddBookOpen}>
+                <Dialog open={isAddBookOpen} onOpenChange={(open) => {
+                  setIsAddBookOpen(open);
+                  if (!open) {
+                    form.reset();
+                    handleRemoveFile();
+                    resetCover();
+                  }
+                }}>
                   <DialogTrigger asChild>
                     <Button className="gap-2">
                       <Plus className="h-4 w-4" /> زیادکردنی کتێب
@@ -277,13 +374,75 @@ export default function Admin() {
                             <FormMessage />
                           </FormItem>
                         )}/>
-                        <FormField control={form.control} name="pdfUrl" render={({ field }) => (
+
+                        {/* PDF Upload Field */}
+                        <FormField control={form.control} name="pdfUrl" render={() => (
                           <FormItem>
-                            <FormLabel>بەستەری PDF</FormLabel>
-                            <FormControl><Input {...field} dir="ltr" className="text-right" placeholder="https://..." /></FormControl>
+                            <FormLabel>فایلی PDF</FormLabel>
+                            <FormControl>
+                              <div>
+                                <input
+                                  ref={pdfFileInputRef}
+                                  type="file"
+                                  accept="application/pdf"
+                                  className="hidden"
+                                  onChange={handleFileSelect}
+                                  disabled={uploadState.isUploading}
+                                />
+                                {!uploadState.file ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => pdfFileInputRef.current?.click()}
+                                    className="w-full border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 text-muted-foreground hover:border-primary hover:text-primary transition-colors cursor-pointer"
+                                  >
+                                    <Upload className="h-8 w-8" />
+                                    <span className="text-sm font-medium">کلیک بکە بۆ هەڵبژاردنی فایل</span>
+                                    <span className="text-xs">PDF · زیاتر نەبێت لە 50MB</span>
+                                  </button>
+                                ) : (
+                                  <div className="border rounded-lg p-3 space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="h-5 w-5 text-primary shrink-0" />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate" dir="ltr">{uploadState.file.name}</p>
+                                        <p className="text-xs text-muted-foreground">{formatFileSize(uploadState.file.size)}</p>
+                                      </div>
+                                      {!uploadState.isUploading && (
+                                        <button
+                                          type="button"
+                                          onClick={handleRemoveFile}
+                                          className="text-muted-foreground hover:text-destructive transition-colors"
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </button>
+                                      )}
+                                    </div>
+                                    {uploadState.isUploading && (
+                                      <div className="space-y-1">
+                                        <Progress value={uploadState.progress} className="h-1.5" />
+                                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                          بارکردن...
+                                        </p>
+                                      </div>
+                                    )}
+                                    {uploadState.objectPath && !uploadState.isUploading && (
+                                      <p className="text-xs text-green-600 flex items-center gap-1">
+                                        <CheckCircle className="h-3 w-3" />
+                                        فایل بە سەرکەوتوویی بارکرا
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
+                                {uploadState.error && (
+                                  <p className="text-xs text-destructive mt-1">{uploadState.error}</p>
+                                )}
+                              </div>
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}/>
+
                         <FormField control={form.control} name="description" render={({ field }) => (
                           <FormItem>
                             <FormLabel>پوختە (ئارەزوومەندانە)</FormLabel>
@@ -292,6 +451,7 @@ export default function Admin() {
                           </FormItem>
                         )}/>
 
+                        {/* Cover Image Upload Field */}
                         <div className="space-y-2">
                           <label className="text-sm font-medium">وێنەی بەرگ (ئارەزوومەندانە)</label>
                           {coverPreview ? (
@@ -310,7 +470,7 @@ export default function Admin() {
                               )}
                             </div>
                           ) : (
-                            <button type="button" onClick={() => fileInputRef.current?.click()}
+                            <button type="button" onClick={() => coverFileInputRef.current?.click()}
                               className="w-full border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-muted/30 transition-colors">
                               <ImageIcon className="h-8 w-8 opacity-40" />
                               <span className="text-sm">کلیک بکە بۆ هەڵبژاردنی وێنە</span>
@@ -318,7 +478,7 @@ export default function Admin() {
                             </button>
                           )}
                           <input
-                            ref={fileInputRef}
+                            ref={coverFileInputRef}
                             type="file"
                             accept="image/jpeg,image/png,image/webp,image/gif"
                             className="hidden"
@@ -326,7 +486,11 @@ export default function Admin() {
                           />
                         </div>
 
-                        <Button type="submit" className="w-full mt-2" disabled={createBookMutation.isPending || isUploadingCover}>
+                        <Button
+                          type="submit"
+                          className="w-full mt-2"
+                          disabled={createBookMutation.isPending || uploadState.isUploading || !uploadState.objectPath || isUploadingCover}
+                        >
                           {createBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           پاشەکەوتکردن
                         </Button>

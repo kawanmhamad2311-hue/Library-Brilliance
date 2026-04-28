@@ -1,8 +1,11 @@
 import { Router } from "express";
+import { Readable } from "stream";
 import { db, booksTable, downloadsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { CreateBookBody, GetBookParams, DeleteBookParams, DownloadBookParams } from "@workspace/api-zod";
 import { requireAuth, requireAdmin } from "../lib/auth";
+import { objectStorageService } from "./storage";
+import { ObjectNotFoundError } from "../lib/objectStorage";
 
 const router = Router();
 
@@ -119,6 +122,58 @@ router.post("/books/:id/download", requireAuth, async (req, res) => {
     pdfUrl: book.pdfUrl,
     book: mapBook({ ...book, downloadCount: book.downloadCount + 1 }),
   });
+});
+
+router.get("/books/:id/pdf", requireAuth, async (req, res) => {
+  const parsed = GetBookParams.safeParse({ id: Number(req.params.id) });
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid book ID" });
+    return;
+  }
+  const books = await db
+    .select()
+    .from(booksTable)
+    .where(eq(booksTable.id, parsed.data.id))
+    .limit(1);
+
+  if (books.length === 0) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  const book = books[0];
+
+  if (req.user.role !== "admin" && book.department !== req.user.department) {
+    res.status(403).json({ error: "Access denied: book belongs to a different department" });
+    return;
+  }
+
+  if (!book.pdfUrl.startsWith("/objects/")) {
+    res.redirect(302, book.pdfUrl);
+    return;
+  }
+
+  try {
+    const objectFile = await objectStorageService.getObjectEntityFile(book.pdfUrl);
+    const response = await objectStorageService.downloadObject(objectFile);
+
+    res.status(response.status);
+    response.headers.forEach((value, key) => res.setHeader(key, value));
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(book.title)}.pdf"`);
+    res.setHeader("Content-Type", "application/pdf");
+
+    if (response.body) {
+      const nodeStream = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
+      nodeStream.pipe(res);
+    } else {
+      res.end();
+    }
+  } catch (error) {
+    if (error instanceof ObjectNotFoundError) {
+      res.status(404).json({ error: "PDF file not found" });
+      return;
+    }
+    res.status(500).json({ error: "Failed to serve PDF" });
+  }
 });
 
 function mapBook(b: typeof booksTable.$inferSelect) {
