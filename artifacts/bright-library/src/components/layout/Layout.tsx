@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogOut, BookOpen, MessageSquare, LayoutDashboard } from "lucide-react";
 import { useLogout } from "@workspace/api-client-react";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -57,7 +58,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-4">
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                {user.role === "admin" && <NotificationBell />}
                 <div className="hidden sm:flex flex-col items-end">
                   <span className="text-sm font-semibold text-foreground">{user.name}</span>
                   <span className="text-xs text-muted-foreground">{user.department}</span>

@@ -144,7 +144,6 @@ export default function Admin() {
     query: {
       queryKey: getGetUnreadNotificationsCountQueryKey(),
       enabled: !!user && user.role === "admin",
-      refetchInterval: 30000,
     }
   });
 
