@@ -26,7 +26,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 import { DEPARTMENTS } from "@/constants/departments";
-export { DEPARTMENTS };
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "تکایە ناوێکی تەواو بنووسە" }),
