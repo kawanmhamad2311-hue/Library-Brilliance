@@ -9,6 +9,7 @@ export const booksTable = pgTable("books", {
   description: text("description").notNull(),
   department: text("department").notNull(),
   pdfUrl: text("pdf_url").notNull(),
+  coverImage: text("cover_image"),
   downloadCount: integer("download_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

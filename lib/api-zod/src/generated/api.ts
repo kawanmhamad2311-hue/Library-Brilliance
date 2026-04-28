@@ -81,6 +81,7 @@ export const ListBooksResponseItem = zod.object({
   description: zod.string(),
   department: zod.string(),
   pdfUrl: zod.string(),
+  coverImage: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   downloadCount: zod.number(),
 });
@@ -95,6 +96,7 @@ export const CreateBookBody = zod.object({
   description: zod.string(),
   department: zod.string(),
   pdfUrl: zod.string(),
+  coverImage: zod.string().nullish(),
 });
 
 /**
@@ -111,6 +113,7 @@ export const GetBookResponse = zod.object({
   description: zod.string(),
   department: zod.string(),
   pdfUrl: zod.string(),
+  coverImage: zod.string().nullish(),
   createdAt: zod.coerce.date(),
   downloadCount: zod.number(),
 });
@@ -142,6 +145,7 @@ export const DownloadBookResponse = zod.object({
     description: zod.string(),
     department: zod.string(),
     pdfUrl: zod.string(),
+    coverImage: zod.string().nullish(),
     createdAt: zod.coerce.date(),
     downloadCount: zod.number(),
   }),
@@ -229,6 +233,13 @@ export const ListUsersResponseItem = zod.object({
   createdAt: zod.coerce.date(),
 });
 export const ListUsersResponse = zod.array(ListUsersResponseItem);
+
+/**
+ * @summary Upload a book cover image (admin only)
+ */
+export const UploadCoverBody = zod.object({
+  cover: zod.instanceof(File),
+});
 
 /**
  * @summary List all feedback across all books (admin only)

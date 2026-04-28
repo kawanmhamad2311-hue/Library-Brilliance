@@ -129,6 +129,7 @@ function mapBook(b: typeof booksTable.$inferSelect) {
     description: b.description,
     department: b.department,
     pdfUrl: b.pdfUrl,
+    coverImage: b.coverImage ?? null,
     createdAt: b.createdAt,
     downloadCount: b.downloadCount,
   };

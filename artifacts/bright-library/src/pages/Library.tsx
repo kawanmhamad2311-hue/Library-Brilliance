@@ -85,12 +85,20 @@ export default function Library() {
             {filteredBooks?.map(book => (
               <Card key={book.id} className="group overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col">
                 <div className="aspect-[4/3] bg-gradient-to-br from-primary/5 to-primary/10 relative flex items-center justify-center p-6 border-b border-border/30">
-                  <div className="w-full h-full bg-white shadow-sm rounded-sm border border-border/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
-                    <div className="absolute top-0 w-full h-2 bg-secondary/80"></div>
-                    <BookOpen className="h-12 w-12 text-primary/40 mb-3" />
-                    <h3 className="font-bold text-sm line-clamp-3 leading-snug">{book.title}</h3>
-                  </div>
-                  <Badge variant="secondary" className="absolute top-3 right-3 shadow-sm border-0 font-medium">
+                  {book.coverImage ? (
+                    <img
+                      src={book.coverImage}
+                      alt={book.title}
+                      className="w-full h-full object-cover absolute inset-0"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-white shadow-sm rounded-sm border border-border/40 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+                      <div className="absolute top-0 w-full h-2 bg-secondary/80"></div>
+                      <BookOpen className="h-12 w-12 text-primary/40 mb-3" />
+                      <h3 className="font-bold text-sm line-clamp-3 leading-snug">{book.title}</h3>
+                    </div>
+                  )}
+                  <Badge variant="secondary" className="absolute top-3 right-3 shadow-sm border-0 font-medium z-10">
                     {book.department}
                   </Badge>
                 </div>

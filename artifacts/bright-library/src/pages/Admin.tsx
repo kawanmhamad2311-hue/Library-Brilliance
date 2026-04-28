@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, Redirect } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +37,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { 
   Book, BookOpen, Download, Loader2, MessageSquare, Plus, 
-  Trash2, Users, LayoutDashboard, FileText
+  Trash2, Users, LayoutDashboard, FileText, ImageIcon, Upload, X
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { 
@@ -55,10 +55,14 @@ const bookSchema = z.object({
 });
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isAddBookOpen, setIsAddBookOpen] = useState(false);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Redirect non-admins
   if (user && user.role !== "admin") {
@@ -99,11 +103,42 @@ export default function Admin() {
     },
   });
 
+  async function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverPreview(URL.createObjectURL(file));
+    setIsUploadingCover(true);
+    try {
+      const formData = new FormData();
+      formData.append("cover", file);
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json() as { url: string };
+      setCoverImageUrl(data.url);
+    } catch {
+      toast({ variant: "destructive", title: "هەڵە روویدا", description: "نەتوانرا وێنەکە بارکرێت." });
+      setCoverPreview(null);
+    } finally {
+      setIsUploadingCover(false);
+    }
+  }
+
+  function resetCover() {
+    setCoverImageUrl(null);
+    setCoverPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   function onSubmitBook(values: z.infer<typeof bookSchema>) {
-    createBookMutation.mutate({ data: values }, {
+    createBookMutation.mutate({ data: { ...values, coverImage: coverImageUrl } }, {
       onSuccess: () => {
         setIsAddBookOpen(false);
         form.reset();
+        resetCover();
         queryClient.invalidateQueries({ queryKey: getListBooksQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
         toast({
@@ -256,7 +291,42 @@ export default function Admin() {
                             <FormMessage />
                           </FormItem>
                         )}/>
-                        <Button type="submit" className="w-full mt-2" disabled={createBookMutation.isPending}>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">وێنەی بەرگ (ئارەزوومەندانە)</label>
+                          {coverPreview ? (
+                            <div className="relative w-full rounded-lg overflow-hidden border border-border bg-muted/20 aspect-[3/2]">
+                              <img src={coverPreview} alt="پێشبینی" className="w-full h-full object-cover" />
+                              {isUploadingCover && (
+                                <div className="absolute inset-0 bg-background/70 flex items-center justify-center">
+                                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                </div>
+                              )}
+                              {!isUploadingCover && (
+                                <button type="button" onClick={resetCover}
+                                  className="absolute top-2 left-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              )}
+                            </div>
+                          ) : (
+                            <button type="button" onClick={() => fileInputRef.current?.click()}
+                              className="w-full border-2 border-dashed border-border/60 rounded-lg p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                              <ImageIcon className="h-8 w-8 opacity-40" />
+                              <span className="text-sm">کلیک بکە بۆ هەڵبژاردنی وێنە</span>
+                              <span className="text-xs opacity-60">JPG, PNG, WebP · زۆرترین 5MB</span>
+                            </button>
+                          )}
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            className="hidden"
+                            onChange={handleCoverFileChange}
+                          />
+                        </div>
+
+                        <Button type="submit" className="w-full mt-2" disabled={createBookMutation.isPending || isUploadingCover}>
                           {createBookMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           پاشەکەوتکردن
                         </Button>

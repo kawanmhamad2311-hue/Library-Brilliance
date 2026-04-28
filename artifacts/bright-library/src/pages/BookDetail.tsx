@@ -152,13 +152,21 @@ export default function BookDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Book Cover and Actions */}
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-24">
-            <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl flex items-center justify-center p-8 border border-border/40 shadow-sm relative overflow-hidden">
-              <div className="w-full h-full bg-white shadow-md rounded-md border border-border/50 flex flex-col items-center justify-center p-6 text-center relative">
-                <div className="absolute top-0 w-full h-3 bg-secondary/80"></div>
-                <BookOpen className="h-16 w-16 text-primary/30 mb-4" />
-                <h3 className="font-bold text-xl line-clamp-4 leading-snug">{book.title}</h3>
-                <p className="text-sm text-muted-foreground mt-4 line-clamp-2">{book.author}</p>
-              </div>
+            <div className="aspect-[3/4] bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl flex items-center justify-center border border-border/40 shadow-sm relative overflow-hidden">
+              {book.coverImage ? (
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center relative bg-white shadow-md rounded-md border border-border/50 m-8">
+                  <div className="absolute top-0 w-full h-3 bg-secondary/80"></div>
+                  <BookOpen className="h-16 w-16 text-primary/30 mb-4" />
+                  <h3 className="font-bold text-xl line-clamp-4 leading-snug">{book.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-4 line-clamp-2">{book.author}</p>
+                </div>
+              )}
             </div>
             
             <Card className="border-border/50 shadow-sm">

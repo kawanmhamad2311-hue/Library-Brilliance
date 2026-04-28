@@ -59,6 +59,7 @@ export interface Book {
   description: string;
   department: string;
   pdfUrl: string;
+  coverImage?: string | null;
   createdAt: string;
   downloadCount: number;
 }
@@ -69,6 +70,11 @@ export interface CreateBookBody {
   description: string;
   department: string;
   pdfUrl: string;
+  coverImage?: string | null;
+}
+
+export interface UploadCoverResponse {
+  url: string;
 }
 
 export interface DownloadResponse {
@@ -134,4 +140,8 @@ export type ListBooksParams = {
 
 export type ListFeedbackParams = {
   bookId?: number;
+};
+
+export type UploadCoverBody = {
+  cover: Blob;
 };

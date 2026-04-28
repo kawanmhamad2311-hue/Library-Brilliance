@@ -33,6 +33,8 @@ import type {
   LoginBody,
   RegisterBody,
   SuccessResponse,
+  UploadCoverBody,
+  UploadCoverResponse,
   User,
 } from "./api.schemas";
 
@@ -1256,6 +1258,94 @@ export function useListUsers<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Upload a book cover image (admin only)
+ */
+export const getUploadCoverUrl = () => {
+  return `/api/upload/cover`;
+};
+
+export const uploadCover = async (
+  uploadCoverBody: UploadCoverBody,
+  options?: RequestInit,
+): Promise<UploadCoverResponse> => {
+  const formData = new FormData();
+  formData.append(`cover`, uploadCoverBody.cover);
+
+  return customFetch<UploadCoverResponse>(getUploadCoverUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getUploadCoverMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadCover>>,
+    TError,
+    { data: BodyType<UploadCoverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof uploadCover>>,
+  TError,
+  { data: BodyType<UploadCoverBody> },
+  TContext
+> => {
+  const mutationKey = ["uploadCover"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof uploadCover>>,
+    { data: BodyType<UploadCoverBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return uploadCover(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UploadCoverMutationResult = NonNullable<
+  Awaited<ReturnType<typeof uploadCover>>
+>;
+export type UploadCoverMutationBody = BodyType<UploadCoverBody>;
+export type UploadCoverMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Upload a book cover image (admin only)
+ */
+export const useUploadCover = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof uploadCover>>,
+    TError,
+    { data: BodyType<UploadCoverBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof uploadCover>>,
+  TError,
+  { data: BodyType<UploadCoverBody> },
+  TContext
+> => {
+  return useMutation(getUploadCoverMutationOptions(options));
+};
 
 /**
  * @summary List all feedback across all books (admin only)

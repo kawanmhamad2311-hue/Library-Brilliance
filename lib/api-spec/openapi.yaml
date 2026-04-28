@@ -389,6 +389,49 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /upload/cover:
+    post:
+      operationId: uploadCover
+      tags: [admin]
+      summary: Upload a book cover image (admin only)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                cover:
+                  type: string
+                  format: binary
+              required:
+                - cover
+      responses:
+        "201":
+          description: Cover image uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadCoverResponse"
+        "400":
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Not authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /admin/feedback:
     get:
       operationId: listAdminFeedback
@@ -527,6 +570,9 @@ components:
           type: string
         pdfUrl:
           type: string
+        coverImage:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -555,12 +601,23 @@ components:
           type: string
         pdfUrl:
           type: string
+        coverImage:
+          type: string
+          nullable: true
       required:
         - title
         - author
         - description
         - department
         - pdfUrl
+
+    UploadCoverResponse:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url
 
     DownloadResponse:
       type: object
